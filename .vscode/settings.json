@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.stickyScroll.enabled": false,
+    "editor.stickyScroll.enabled": false,
+    "workbench.tree.enableStickyScroll": false
+}

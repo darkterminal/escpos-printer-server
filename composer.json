@@ -1,0 +1,35 @@
+{
+    "name": "darkterminal/escpos-printer-server",
+    "description": "The fck'in simple escpos printer server",
+    "type": "library",
+    "version": "1.0.0",
+    "require": {
+        "workerman/workerman": "^5.1",
+        "mike42/escpos-php": "^4.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Darkterminal\\EscposPrinterServer\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Imam Ali Mustofa",
+            "email": "darkterminal@duck.com"
+        }
+    ],
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/darkterminal"
+        },
+        {
+            "type": "saweria",
+            "url": "https://saweria.co/darkterminal"
+        }
+    ]
+}

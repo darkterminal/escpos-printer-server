@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+
+use Darkterminal\EscposPrinterServer\Server;
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+$host = '0.0.0.0';
+$port = 1945;
+$logs = __DIR__ . DIRECTORY_SEPARATOR . 'logs';
+
+$args = $argv;
+array_shift($args);
+$argAndOptions = argv2assoc($args);
+
+foreach ($argAndOptions as $key => $value) {
+    switch ($key) {
+        case '--host':
+        case '-h':
+            $host = $value;
+            break;
+        case '--port':
+        case '-p':
+            $port = $value;
+            break;
+        case '--log-dir':
+        case '--logs':
+        case '-l':
+            $logs = $value;
+            break;
+    }
+    
+    if (in_array($key, ['--host', '-h', '--port', '-p', '--log-dir', '--logs', '-l'])) {
+        unset($argAndOptions[$key]);
+    }
+}
+
+echo "Starting server on $host:$port" . PHP_EOL;
+echo "Logs: $logs" . PHP_EOL;
+
+$server = new Server($host, $port);
+$server->setLogDirectory($logs);
+$server->run();
