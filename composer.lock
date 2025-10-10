@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f23b78704043e2e57e54958bd733118",
+    "content-hash": "7ad0d9708cc7706c968e993c0fa5c283",
     "packages": [
         {
             "name": "mike42/escpos-php",

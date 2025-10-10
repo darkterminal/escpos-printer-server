@@ -16,6 +16,10 @@
             "src/functions.php"
         ]
     },
+    "scripts": {
+        "build": "./build-phar.sh"
+    },
+    "bin": "./eps",
     "authors": [
         {
             "name": "Imam Ali Mustofa",

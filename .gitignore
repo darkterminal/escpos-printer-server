@@ -2,11 +2,4 @@ logs/
 *.log
 vendor/
 *.txt
-
-# static-php-cli
-spc
-log/
-downloads/
-source/
-buildroot/
-pkgroot/
+*.bak

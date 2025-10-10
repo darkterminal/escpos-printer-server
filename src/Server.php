@@ -37,7 +37,7 @@ class Server implements PrinterServer
                 throw new \InvalidArgumentException('Invalid payload: Missing required fields (from, printer_name, printer_settings)');
             }
 
-            $receiptPrinter = new ReceiptPrinter($data, $data['printer_settings']);
+            $receiptPrinter = new ReceiptPrinter($data['reciept_data'], $data['printer_settings']);
 
             switch ($data['from']) {
                 case 'postclient':
