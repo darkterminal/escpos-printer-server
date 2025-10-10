@@ -1,10 +1,8 @@
 name: Build Windows Bundle
 
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+  release:
+    types: [created]
 
 permissions:
   contents: write
