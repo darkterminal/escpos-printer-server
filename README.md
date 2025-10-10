@@ -5,7 +5,6 @@
       <img alt="Shows a black logo in light color mode and a white one in dark color mode." src="assets/eps-black.png">
     </picture>
 </p>
-<h1 align="center">ESC/POS Printer Server</h1>
 <p align="center">A simple and efficient ESC/POS printer server built with PHP, <a href="https://github.com/walkor/workerman" target="_blank">Workerman</a> and <a href="https://github.com/mike42/escpos-php" target="_blank">ESC/POS-PHP</a>, providing WebSocket-based printing capabilities for thermal printers.</p>
 
 ## Features
