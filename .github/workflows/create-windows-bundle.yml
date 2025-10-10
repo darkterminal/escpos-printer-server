@@ -111,12 +111,12 @@ jobs:
 
       - name: Package release assets
         run: |
-          ZIP_NAME=eps-windows-bundle.zip
-          cd $RELEASE_DIR
-          zip -r ../$ZIP_NAME ./*
+          ZIP_NAME="eps-windows-bundle.zip"
+          cd "$RELEASE_DIR"
+          zip -r "../$ZIP_NAME" ./*
           cd ..
-          echo "$ZIP_NAME" >> $GITHUB_ENV
-          ls -lh $ZIP_NAME
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          ls -lh "$ZIP_NAME"
 
       - name: Release
         uses: softprops/action-gh-release@v1
