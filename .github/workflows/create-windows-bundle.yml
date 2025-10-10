@@ -46,6 +46,10 @@ jobs:
           unzip -q /tmp/php8.4.zip -d /tmp/php_unpack
           mkdir -p "$RELEASE_DIR/php"
           cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/" || true
+          cp "$RELEASE_DIR/php/php.ini-production" "$RELEASE_DIR/php/php.ini"
+          # Enable required extensions
+          echo "extension=intl" >> "$RELEASE_DIR/php/php.ini"
+          echo "extension=sockets" >> "$RELEASE_DIR/php/php.ini"
           ls -la "$RELEASE_DIR/php" | head -n 20
 
       - name: Add eps.phar (from repo)
@@ -64,7 +68,7 @@ jobs:
           REM install-eps-service.bat
           REM Installs eps.phar as a Windows service using nssm.exe
           SETLOCAL
-          set "SVCNAME=eps"
+          set "SVCNAME=EscPosPrinterServer"
           set "BASEDIR=%~dp0"
           set "NSSM=%BASEDIR%nssm.exe"
           set "PHP=%BASEDIR%php\php.exe"
@@ -96,7 +100,7 @@ jobs:
           REM stop-eps-service.bat
           REM Stops the eps Windows service
           SETLOCAL
-          set "SVCNAME=eps"
+          set "SVCNAME=EscPosPrinterServer"
           set "BASEDIR=%~dp0"
           set "NSSM=%BASEDIR%nssm.exe"
 
@@ -117,7 +121,7 @@ jobs:
           REM uninstall-eps-service.bat
           REM Stops and removes the eps Windows service
           SETLOCAL
-          set "SVCNAME=eps"
+          set "SVCNAME=EscPosPrinterServer"
           set "BASEDIR=%~dp0"
           set "NSSM=%BASEDIR%nssm.exe"
 
