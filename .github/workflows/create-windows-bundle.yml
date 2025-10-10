@@ -12,70 +12,61 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RELEASE_DIR: release-assets
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Prepare release dir
         run: |
-          rm -rf $RELEASE_DIR
-          mkdir -p $RELEASE_DIR
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR"
 
       - name: Download nssm (2.24)
         run: |
           NSSM_URL="https://nssm.cc/release/nssm-2.24.zip"
           curl -L -o /tmp/nssm.zip "$NSSM_URL"
           unzip -q /tmp/nssm.zip -d /tmp/nssm_unpack
-          # Find nssm.exe (both x86/x64 possible paths) and copy
-          find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} $RELEASE_DIR/ \;
-          ls -la $RELEASE_DIR || true
+          find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
+          ls -la "$RELEASE_DIR" || true
 
       - name: Download latest PHP 8.4 x64 build (automatic detection)
         shell: bash
         run: |
-          # Fetch available release listing and choose the latest php-8.4.*-Win32-vs*-x64.zip
           LISTING="$(curl -s https://windows.php.net/downloads/releases/)"
-          # extract candidate filenames, sort by version, pick last
           PHP_ZIP=$(echo "$LISTING" \
             | egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' \
-            | sort -V \
-            | tail -n1)
+            | sort -V | tail -n1)
           if [ -z "$PHP_ZIP" ]; then
-            echo "ERROR: Could not determine PHP 8.4 x64 filename from windows.php.net. Falling back to explicit filename (adjust if necessary)."
-            # fallback: specify a known filename - change if newer patch desired
+            echo "Fallback: Using php-8.4.13-Win32-vs17-x64.zip"
             PHP_ZIP="php-8.4.13-Win32-vs17-x64.zip"
           fi
-          echo "Selected PHP package: $PHP_ZIP"
+          echo "Downloading $PHP_ZIP..."
           curl -L -o /tmp/php8.4.zip "https://windows.php.net/downloads/releases/$PHP_ZIP"
           unzip -q /tmp/php8.4.zip -d /tmp/php_unpack
-          # Put entire php folder (so php.exe + dlls) under release dir/php/
-          mkdir -p $RELEASE_DIR/php
-          # php distribution usually extracts to a folder named like php-8.4.x-Win32-vs17-x64 or directly contains php.exe
-          # copy contents into release dir
-          cp -r /tmp/php_unpack/* $RELEASE_DIR/php/ || true
-          ls -la $RELEASE_DIR/php | sed -n '1,200p' || true
+          mkdir -p "$RELEASE_DIR/php"
+          cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/" || true
+          ls -la "$RELEASE_DIR/php" | head -n 20
 
       - name: Add eps.phar (from repo)
         run: |
           if [ ! -f bin/eps.phar ]; then
-            echo "ERROR: bin/eps.phar not found in repository. Ensure file exists."
+            echo "ERROR: bin/eps.phar not found in repository."
             exit 1
           fi
-          cp bin/eps.phar $RELEASE_DIR/
+          cp bin/eps.phar "$RELEASE_DIR/"
 
-      - name: Create Windows service installer BAT
+      - name: Create Windows BAT scripts
         run: |
-          cat > $RELEASE_DIR/install-eps-service.bat <<'BAT'
+          # === INSTALL SCRIPT ===
+          cat > "$RELEASE_DIR/install-eps-service.bat" <<'BAT'
           @echo off
           REM install-eps-service.bat
-          REM This script installs eps.phar as a Windows service using nssm.exe
+          REM Installs eps.phar as a Windows service using nssm.exe
           SETLOCAL
-
           set "SVCNAME=eps"
           set "BASEDIR=%~dp0"
-          REM Path to nssm.exe (expected in same folder as this .bat)
           set "NSSM=%BASEDIR%nssm.exe"
-          REM Use the PHP binary included in the package (under php\)
           set "PHP=%BASEDIR%php\php.exe"
           set "EPS=%BASEDIR%eps.phar"
 
@@ -84,7 +75,7 @@ jobs:
             exit /b 1
           )
           if not exist "%PHP%" (
-            echo php.exe not found in %BASEDIR%php\ - make sure PHP was unpacked here.
+            echo php.exe not found in %BASEDIR%php\
             exit /b 2
           )
           if not exist "%EPS%" (
@@ -92,18 +83,55 @@ jobs:
             exit /b 3
           )
 
-          REM Install service: executable is php.exe, parameter is the phar file
           "%NSSM%" install "%SVCNAME%" "%PHP%" "%EPS%"
-
-          REM Set working dir so relative files inside eps.phar can work
           "%NSSM%" set "%SVCNAME%" AppDirectory "%BASEDIR%"
-          REM Optionally set AppParameters (if you need flags, e.g. -d some.ini)
-          REM "%NSSM%" set "%SVCNAME%" AppParameters "-d phar.require_hash=0 %EPS%"
-
-          REM Start the service
           "%NSSM%" start "%SVCNAME%"
+          echo Service "%SVCNAME%" installed and started.
+          ENDLOCAL
+          BAT
 
-          echo Service "%SVCNAME%" installed (or configured). Use nssm.exe to manage it.
+          # === STOP SCRIPT ===
+          cat > "$RELEASE_DIR/stop-eps-service.bat" <<'BAT'
+          @echo off
+          REM stop-eps-service.bat
+          REM Stops the eps Windows service
+          SETLOCAL
+          set "SVCNAME=eps"
+          set "BASEDIR=%~dp0"
+          set "NSSM=%BASEDIR%nssm.exe"
+
+          if not exist "%NSSM%" (
+            echo nssm.exe not found in %BASEDIR%
+            exit /b 1
+          )
+
+          echo Stopping service "%SVCNAME%"...
+          "%NSSM%" stop "%SVCNAME%"
+          echo Done.
+          ENDLOCAL
+          BAT
+
+          # === UNINSTALL SCRIPT ===
+          cat > "$RELEASE_DIR/uninstall-eps-service.bat" <<'BAT'
+          @echo off
+          REM uninstall-eps-service.bat
+          REM Stops and removes the eps Windows service
+          SETLOCAL
+          set "SVCNAME=eps"
+          set "BASEDIR=%~dp0"
+          set "NSSM=%BASEDIR%nssm.exe"
+
+          if not exist "%NSSM%" (
+            echo nssm.exe not found in %BASEDIR%
+            exit /b 1
+          )
+
+          echo Stopping service "%SVCNAME%"...
+          "%NSSM%" stop "%SVCNAME%"
+          timeout /t 2 >nul
+          echo Removing service "%SVCNAME%"...
+          "%NSSM%" remove "%SVCNAME%" confirm
+          echo Service "%SVCNAME%" uninstalled.
           ENDLOCAL
           BAT
 
@@ -116,7 +144,7 @@ jobs:
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
           ls -lh "$ZIP_NAME"
 
-      - name: Release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |

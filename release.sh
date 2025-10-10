@@ -95,4 +95,12 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+# Step 7: Create GitHub release
+echo "Creating GitHub release..."
+gh release create "$NEW_VERSION" --title "$NEW_VERSION" --notes-file CHANGELOG.md
+if [[ $? -ne 0 ]]; then
+  echo "Error: GitHub release creation failed."
+  exit 1
+fi
+
 echo "Build process for $BUILD_TYPE version $NEW_VERSION completed successfully!"
