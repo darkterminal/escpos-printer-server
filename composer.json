@@ -17,7 +17,8 @@
     ]
   },
   "scripts": {
-    "build": "./build-phar.sh"
+    "build": "./build-phar.sh",
+    "release": "build && ./release.sh"
   },
   "bin": "./eps",
   "authors": [
@@ -35,5 +36,13 @@
       "type": "saweria",
       "url": "https://saweria.co/darkterminal"
     }
-  ]
+  ],
+  "require-dev": {
+    "bamarni/composer-bin-plugin": "^1.8"
+  },
+  "config": {
+    "allow-plugins": {
+      "bamarni/composer-bin-plugin": true
+    }
+  }
 }

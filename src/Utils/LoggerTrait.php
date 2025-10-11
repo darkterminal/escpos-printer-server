@@ -23,6 +23,10 @@ trait LoggerTrait
         $timestamp = date('Y-m-d H:i:s');
         $logEntry = "[$timestamp] [$type] $message" . PHP_EOL;
 
+        $baseDir = class_exists('Phar') && \Phar::running(false) ? dirname(\Phar::running(false)) : __DIR__;
+
+        $this->logDirectory = $baseDir;
+
         // Create log directory if it doesn't exist
         if (!is_dir($this->logDirectory)) {
             mkdir($this->logDirectory, 0777, true);
