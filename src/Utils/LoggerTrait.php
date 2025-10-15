@@ -9,7 +9,7 @@ trait LoggerTrait
      * Log directory path
      * @var string
      */
-    private $logDirectory = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs'; // Adjusted path relative to src
+    protected $logDirectory = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs'; // Adjusted path relative to src
 
     /**
      * Log a message with specified type
@@ -25,7 +25,7 @@ trait LoggerTrait
 
         $baseDir = class_exists('Phar') && \Phar::running(false) ? dirname(\Phar::running(false)) : __DIR__;
 
-        $this->logDirectory = $baseDir;
+        $this->logDirectory = dirname(dirname($baseDir)) . DIRECTORY_SEPARATOR . 'logs';
 
         // Create log directory if it doesn't exist
         if (!is_dir($this->logDirectory)) {

@@ -89,6 +89,10 @@ class Server implements PrinterServer
         // Create a Websocket server
         $ws_worker = new Worker("websocket://{$this->host}:{$this->port}");
 
+        Worker::$stdoutFile = $this->logDirectory . DIRECTORY_SEPARATOR . 'stdout.log';
+        Worker::$logFile = $this->logDirectory . DIRECTORY_SEPARATOR . 'workerman.log';
+        Worker::$pidFile = $this->logDirectory . DIRECTORY_SEPARATOR . 'workerman.pid';
+
         // Emitted when new connection come
         $ws_worker->onConnect = function ($connection): void {
             $this->onConnect($connection);

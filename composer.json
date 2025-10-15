@@ -17,7 +17,7 @@
     ]
   },
   "scripts": {
-    "build": "./build-phar.sh",
+    "build": "sh ./build-phar.sh",
     "release:patch": "./release.sh patch",
     "release:minor": "./release.sh minor",
     "release:major": "./release.sh major"
