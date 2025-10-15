@@ -9,7 +9,7 @@ trait LoggerTrait
      * Log directory path
      * @var string
      */
-    private $logDirectory = __DIR__ . '/../logs'; // Adjusted path relative to src
+    private $logDirectory = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs'; // Adjusted path relative to src
 
     /**
      * Log a message with specified type
@@ -33,7 +33,7 @@ trait LoggerTrait
         }
 
         // Create log filename with current date
-        $filename = $this->logDirectory . '/app_' . date('Y-m-d') . '.log';
+        $filename = $this->logDirectory .  DIRECTORY_SEPARATOR . 'app_' . date('Y-m-d') . '.log';
 
         // Write to log file
         file_put_contents($filename, $logEntry, FILE_APPEND | LOCK_EX);
@@ -94,6 +94,6 @@ trait LoggerTrait
      */
     public function setLogDirectory(string $directory): void
     {
-        $this->logDirectory = rtrim($directory, '/');
+        $this->logDirectory = rtrim($directory, DIRECTORY_SEPARATOR);
     }
 }
