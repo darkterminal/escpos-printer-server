@@ -18,9 +18,9 @@
   },
   "scripts": {
     "build": "./build-phar.sh",
-    "release:patch": "./build-phar.sh && ./release.sh patch",
-    "release:minor": "./build-phar.sh && ./release.sh minor",
-    "release:major": "./build-phar.sh && ./release.sh major"
+    "release:patch": "./release.sh patch",
+    "release:minor": "./release.sh minor",
+    "release:major": "./release.sh major"
   },
   "bin": "./eps",
   "authors": [

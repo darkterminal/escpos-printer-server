@@ -1,5 +1,6 @@
 logs/
 *.log
 vendor/
+vendor-bin/
 *.txt
 *.bak
