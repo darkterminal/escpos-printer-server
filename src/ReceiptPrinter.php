@@ -5,7 +5,9 @@ namespace Darkterminal\EscposPrinterServer;
 
 use Darkterminal\EscposPrinterServer\Utils\CommonTrait;
 use Darkterminal\EscposPrinterServer\Utils\LoggerTrait;
+use Mike42\Escpos\CapabilityProfile;
 use Mike42\Escpos\PrintConnectors\CupsPrintConnector;
+use Mike42\Escpos\PrintConnectors\DummyPrintConnector;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
@@ -16,13 +18,10 @@ class ReceiptPrinter
     use CommonTrait;
     use LoggerTrait;
 
-    public function __construct(
-        public array $receiptData,
-        public array $printerSettings
-    ) {
-        $this->receiptData = $receiptData;
-        $this->printerSettings = $printerSettings;
-    }
+    public array $receiptData;
+    public array $printerSettings;
+
+    public function __construct() {}
 
     /**
      * Print receipt based on the provided data
@@ -108,7 +107,8 @@ class ReceiptPrinter
     public function testPrinter(): void
     {
         try {
-            $connector = $this->createPrinterConnector($this->printerSettings);
+            $connector = new DummyPrintConnector();
+            CapabilityProfile::load("TSP600");
             $printer = new Printer($connector);
 
             $printer->initialize();
@@ -119,9 +119,9 @@ class ReceiptPrinter
             $printer->feed(2);
             $printer->cut();
 
-            if ($this->printerSettings['pull_cash_drawer'] ?? false) {
-                $printer->pulse();
-            }
+            $data = $connector->getData();
+
+            echo $data . PHP_EOL;
 
             $printer->close();
 
@@ -137,14 +137,14 @@ class ReceiptPrinter
      */
     private function createPrinterConnector(array $settings): CupsPrintConnector|FilePrintConnector|NetworkPrintConnector|WindowsPrintConnector
     {
-        $allowed_interfaces = ['cpus', 'ethernet', 'linux-usb', 'smb', 'windows-usb', 'windows-lpt'];
+        $allowed_interfaces = ['cups', 'ethernet', 'linux-usb', 'smb', 'windows-usb', 'windows-lpt'];
 
         if (!in_array($settings['interface'] ?? '', $allowed_interfaces)) {
             throw new \Exception('Invalid printer interface: ' . ($settings['interface'] ?? 'none'));
         }
 
         switch ($settings['interface']) {
-            case 'cpus':
+            case 'cups':
                 return new CupsPrintConnector($settings['printer_name']);
             case 'ethernet':
                 $host = $settings['printer_host'] ?? $settings['printer_name'];
@@ -173,8 +173,8 @@ class ReceiptPrinter
             }
         }
 
-        if (!is_array($receiptData['cart'])) {
-            throw new \Exception('Shopping items must be an array');
+        if (!is_array($receiptData['receipt_data'])) {
+            throw new \Exception('Receipt data must be an array');
         }
 
         if (isset($receiptData['transaction'])) {

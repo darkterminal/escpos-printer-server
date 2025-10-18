@@ -6,11 +6,17 @@ namespace Darkterminal\EscposPrinterServer;
 use Darkterminal\EscposPrinterServer\Contracts\PrinterServer;
 use Darkterminal\EscposPrinterServer\Utils\LoggerTrait;
 use Workerman\Connection\TcpConnection;
+use Workerman\Protocols\Http\Request;
+use Workerman\Protocols\Http\Response;
 use Workerman\Worker;
 
 class Server implements PrinterServer
 {
     use LoggerTrait;
+
+    protected string $configDir;
+    protected string $configFile;
+    protected string $settingsPage;
 
     public function __construct(
         public ?string $host = '0.0.0.0',
@@ -19,6 +25,65 @@ class Server implements PrinterServer
     {
         $this->host = $host;
         $this->port = $port;
+
+        // Shared config file path
+        $this->configDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config';
+        $this->configFile = $this->configDir . DIRECTORY_SEPARATOR . 'printer-settings.json';
+        $this->settingsPage = $this->configDir . DIRECTORY_SEPARATOR . 'settings.html';
+    }
+
+    private function createConfigurationSettings(): void
+    {
+        if (!is_dir($this->configDir)) {
+            mkdir($this->configDir, 0777, true);
+        }
+
+        if (!file_exists($this->configFile)) {
+            $defaultPrinterSetting = [
+                'from' => 'testprinter',
+                'printer_name' => 'IW-8001',
+                'printer_settings' => [
+                    'printer_name' => 'IW-8001',
+                    'interface' => 'ethernet',
+                    'printer_host' => '192.168.1.150',
+                    'printer_port' => 9100,
+                    'template' => 'epson',
+                    'pull_cash_drawer' => true,
+                    'line_feed_each_in_items' => 1,
+                    'more_new_line' => 0,
+                    'custom_print_header' => [
+                        'DARKTERMINAL MART',
+                        'Jl. Merdeka No. 45, Tegal',
+                        'Open 07:30 - 16:30',
+                    ],
+                    'custom_print_footer' => [
+                        'Darkterminal Mart',
+                        'Belanja Nyaman, Harga Aman',
+                    ],
+                    'custom_language' => [
+                        'operator' => 'Kasir',
+                        'time' => 'Waktu',
+                        'transaction_number' => 'No TRX',
+                        'customer_name' => 'Nama Pelanggan',
+                        'tax' => 'Pajak',
+                        'member' => 'Diskon Member',
+                        'total' => 'Total Belanja',
+                        'paid' => 'Tunai',
+                        'return' => 'Kembalian',
+                        'due_date' => 'Jatuh Tempo',
+                        'saving' => 'Tabungan',
+                        'loan' => 'Piutang',
+                    ],
+                ],
+            ];
+
+            file_put_contents($this->configFile, json_encode($defaultPrinterSetting, JSON_PRETTY_PRINT));
+        }
+
+        if (!file_exists($this->settingsPage)) {
+            $settingPageRawFile = "https://github.com/darkterminal/escpos-printer-server/raw/refs/heads/main/config/settings.html";
+            file_put_contents($this->settingsPage, file_get_contents($settingPageRawFile));
+        }
     }
 
     public function onConnect(TcpConnection $connection): void
@@ -37,10 +102,12 @@ class Server implements PrinterServer
                 throw new \InvalidArgumentException('Invalid payload: Missing required fields (from, printer_name, printer_settings)');
             }
 
-            $receiptPrinter = new ReceiptPrinter($data['reciept_data'], $data['printer_settings']);
+            $receiptPrinter = new ReceiptPrinter();
+            $receiptPrinter->receiptData = $data['receipt_data'];
+            $receiptPrinter->printerSettings = $data['printer_settings'];
 
             switch ($data['from']) {
-                case 'postclient':
+                case 'posclient':
                     $receiptPrinter->printReceipt();
                     $responseMesage = $this->createMessage('success', 'Receipt printed successfully');
                     break;
@@ -88,6 +155,7 @@ class Server implements PrinterServer
     {
         // Create a Websocket server
         $ws_worker = new Worker("websocket://{$this->host}:{$this->port}");
+        $ws_worker->name = "EscposPrinterServer";
 
         Worker::$stdoutFile = $this->logDirectory . DIRECTORY_SEPARATOR . 'stdout.log';
         Worker::$logFile = $this->logDirectory . DIRECTORY_SEPARATOR . 'workerman.log';
@@ -106,6 +174,52 @@ class Server implements PrinterServer
         // Emitted when connection closed
         $ws_worker->onClose = function ($connection): void {
             $this->onClose($connection);
+        };
+        
+        // === HTTP SERVER ===
+        $http_worker = new Worker("http://{$this->host}:1100");
+        $http_worker->name = 'EscposWebGui';
+        $http_worker->count = 1;
+
+        $configFile = $this->configFile;
+        $settingsPage = $this->settingsPage;
+
+        $http_worker->onMessage = function ($connection, Request $request) use ($configFile, $settingsPage) {
+            $path = $request->path();
+            $method = $request->method();
+
+            // Serve the HTML UI at root
+            if ($path === '/' || $path === '/settings' || $path === '/index.html') {
+                if (file_exists($settingsPage)) {
+                    $html = file_get_contents($settingsPage);
+                    $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
+                } else {
+                    $connection->send(new Response(404, ['Content-Type' => 'text/plain'], 'settings.html not found.'));
+                }
+                return;
+            }
+
+            // Serve API endpoints
+            if ($path === '/api/config') {
+                if ($method === 'GET') {
+                    $data = file_exists($configFile) ? file_get_contents($configFile) : '{}';
+                    $connection->send(new Response(200, ['Content-Type' => 'application/json'], $data));
+                    return;
+                }
+
+                if ($method === 'POST') {
+                    $body = $request->rawBody();
+                    file_put_contents($configFile, $body);
+                    $connection->send(new Response(200, ['Content-Type' => 'application/json'], json_encode(['status' => 'saved'])));
+                    return;
+                }
+
+                $connection->send(new Response(405, [], 'Method Not Allowed'));
+                return;
+            }
+
+            // 404 fallback
+            $connection->send(new Response(404, ['Content-Type' => 'text/plain'], 'Not Found'));
         };
 
         // Run worker

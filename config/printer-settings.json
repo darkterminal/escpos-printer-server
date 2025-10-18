@@ -1,0 +1,37 @@
+{
+  "from": "testprinter",
+  "printer_name": "IW-8001",
+  "printer_settings": {
+    "printer_name": "IW-8001",
+    "interface": "ethernet",
+    "printer_host": "192.168.1.150",
+    "printer_port": 9100,
+    "template": "epson",
+    "pull_cash_drawer": true,
+    "line_feed_each_in_items": 1,
+    "more_new_line": 0,
+    "custom_print_header": [
+      "DARKTERMINAL MART",
+      "Jl. Merdeka No. 45, Tegal",
+      "Open 07:30 - 16:30"
+    ],
+    "custom_print_footer": [
+      "Darkterminal Mart",
+      "Belanja Nyaman, Harga Aman"
+    ],
+    "custom_language": {
+      "operator": "Kasir",
+      "time": "Waktu",
+      "transaction_number": "No TRX",
+      "customer_name": "Nama Pelanggan",
+      "tax": "Pajak",
+      "member": "Diskon Member",
+      "total": "Total Belanja",
+      "paid": "Tunai",
+      "return": "Kembalian",
+      "due_date": "Jatuh Tempo",
+      "saving": "Tabungan",
+      "loan": "Piutang"
+    }
+  }
+}
