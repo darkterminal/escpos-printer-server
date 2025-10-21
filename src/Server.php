@@ -151,6 +151,55 @@ class Server implements PrinterServer
         $connection->close();
     }
 
+    public function runWebsocketOnly(): void
+    {
+        $ws = new Worker("websocket://{$this->host}:{$this->port}");
+        $ws->name = 'EscposPrinterServer';
+        $ws->onConnect = fn($conn) => $this->onConnect($conn);
+        $ws->onMessage = fn($conn, $data) => $this->onMessage($conn, $data);
+        $ws->onClose = fn($conn) => $this->onClose($conn);
+
+        Worker::$stdoutFile = "{$this->logDirectory}". DIRECTORY_SEPARATOR ."stdout_ws.log";
+        Worker::$logFile = "{$this->logDirectory}". DIRECTORY_SEPARATOR ."workerman_ws.log";
+        Worker::runAll();
+    }
+
+    public function runHttpOnly(): void
+    {
+        $http = new Worker("http://{$this->host}:1100");
+        $http->name = 'EscposHTTP';
+        $http->count = 1;
+
+        $configFile = $this->configFile;
+        $settingsPage = $this->settingsPage;
+
+        $http->onMessage = function ($connection, Request $req) use ($configFile, $settingsPage) {
+            $path = $req->path();
+            if ($path === '/' || $path === '/settings') {
+                $html = file_exists($settingsPage) ? file_get_contents($settingsPage) : '<h1>Settings page missing</h1>';
+                $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
+                return;
+            }
+            if ($path === '/api/config') {
+                if ($req->method() === 'GET') {
+                    $data = file_exists($configFile) ? file_get_contents($configFile) : '{}';
+                    $connection->send(new Response(200, ['Content-Type' => 'application/json'], $data));
+                } elseif ($req->method() === 'POST') {
+                    file_put_contents($configFile, $req->rawBody());
+                    $connection->send(new Response(200, ['Content-Type' => 'application/json'], json_encode(['status' => 'saved'])));
+                } else {
+                    $connection->send(new Response(405, [], 'Method Not Allowed'));
+                }
+                return;
+            }
+            $connection->send(new Response(404, [], 'Not Found'));
+        };
+
+        Worker::$stdoutFile = "{$this->logDirectory}/stdout_http.log";
+        Worker::$logFile = "{$this->logDirectory}/workerman_http.log";
+        Worker::runAll();
+    }
+
     public function run(): void
     {
         // Create a Websocket server

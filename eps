@@ -15,6 +15,9 @@ $argAndOptions = argv2assoc($args);
 
 foreach ($argAndOptions as $key => $value) {
     switch ($key) {
+        case '--role':
+            $role = strtolower($value);
+            break;
         case '--host':
         case '-h':
             $host = $value;
@@ -40,4 +43,9 @@ echo "Logs: $logs" . PHP_EOL;
 
 $server = new Server($host, $port);
 $server->setLogDirectory($logs);
-$server->run();
+
+match ($role) {
+    'ws' => $server->runWebSocketOnly(),
+    'http' => $server->runHttpOnly(),
+    default => $server->run()
+};
