@@ -1,155 +1,103 @@
-name: Build Windows Bundle
+name: Build & Release Windows Bundle
 
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
+
     env:
-      RELEASE_DIR: release-assets
+      RELEASE_DIR: eps-windows-bundle
+      NSSM_URL: https://nssm.cc/release/nssm-2.24.zip
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare release dir
+      # --- Install PHP & Composer ---
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, sockets, openssl
+          coverage: none
+
+      - name: Install Composer dependencies (Linux PHP)
+        run: composer install --no-dev --optimize-autoloader
+
+      # --- Prepare bundle directory ---
+      - name: Prepare release directory
         run: |
           rm -rf "$RELEASE_DIR"
           mkdir -p "$RELEASE_DIR"
 
-      - name: Download nssm (2.24)
+      # --- Download and include NSSM ---
+      - name: Download and extract NSSM
         run: |
-          NSSM_URL="https://nssm.cc/release/nssm-2.24.zip"
           curl -L -o /tmp/nssm.zip "$NSSM_URL"
           unzip -q /tmp/nssm.zip -d /tmp/nssm_unpack
           find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
-          ls -la "$RELEASE_DIR" || true
 
-      - name: Download latest PHP 8.4 x64 build (automatic detection)
-        shell: bash
+      # --- Find latest PHP Windows build ---
+      - name: Find latest PHP 8.4 Windows build
+        id: php
         run: |
           LISTING="$(curl -s https://windows.php.net/downloads/releases/)"
-          PHP_ZIP=$(echo "$LISTING" \
-            | egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' \
-            | sort -V | tail -n1)
+          PHP_ZIP=$(echo "$LISTING" | egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' | sort -V | tail -n1)
           if [ -z "$PHP_ZIP" ]; then
-            echo "Fallback: Using php-8.4.13-Win32-vs17-x64.zip"
-            PHP_ZIP="php-8.4.13-Win32-vs17-x64.zip"
+              PHP_ZIP="php-8.4.13-Win32-vs17-x64.zip"
           fi
-          echo "Downloading $PHP_ZIP..."
-          curl -L -o /tmp/php8.4.zip "https://windows.php.net/downloads/releases/$PHP_ZIP"
-          unzip -q /tmp/php8.4.zip -d /tmp/php_unpack
+          echo "php_zip=$PHP_ZIP" >> $GITHUB_OUTPUT
+
+      # --- Download & unpack PHP for Windows bundle ---
+      - name: Download and unpack PHP (Windows build)
+        run: |
+          curl -L -o /tmp/php.zip "https://windows.php.net/downloads/releases/${{ steps.php.outputs.php_zip }}"
+          unzip -q /tmp/php.zip -d /tmp/php_unpack
           mkdir -p "$RELEASE_DIR/php"
-          cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/" || true
+          cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/"
           cp "$RELEASE_DIR/php/php.ini-production" "$RELEASE_DIR/php/php.ini"
-          # Enable required extensions
           echo "extension=intl" >> "$RELEASE_DIR/php/php.ini"
           echo "extension=sockets" >> "$RELEASE_DIR/php/php.ini"
-          ls -la "$RELEASE_DIR/php" | head -n 20
+          echo "extension=openssl" >> "$RELEASE_DIR/php/php.ini"
+          echo "extension_dir=ext" >> "$RELEASE_DIR/php/php.ini"
 
-      - name: Add eps.phar (from repo)
+      # --- Copy application files ---
+      - name: Copy project files into bundle
         run: |
-          if [ ! -f bin/eps.phar ]; then
-            echo "ERROR: bin/eps.phar not found in repository."
-            exit 1
-          fi
-          cp bin/eps.phar "$RELEASE_DIR/"
+          mkdir -p "$RELEASE_DIR/config" "$RELEASE_DIR/src"
+          cp -r config/ "$RELEASE_DIR/config/" || true
+          cp -r src/ "$RELEASE_DIR/src/" || true
+          cp composer.json "$RELEASE_DIR/composer.json"
+          cp eps "$RELEASE_DIR/eps"
+          cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
+          cp scripts/eps-uninstall.bat "$RELEASE_DIR/eps-uninstall.bat"
+          cp -r vendor "$RELEASE_DIR/vendor"
 
-      - name: Create Windows BAT scripts
+      # --- Create tagged ZIP bundle ---
+      - name: Create ZIP filename
+        id: zipname
         run: |
-          # === INSTALL SCRIPT ===
-          cat > "$RELEASE_DIR/install-eps-service.bat" <<'BAT'
-          @echo off
-          REM install-eps-service.bat
-          REM Installs eps.phar as a Windows service using nssm.exe
-          SETLOCAL
-          set "SVCNAME=EscPosPrinterServer"
-          set "BASEDIR=%~dp0"
-          set "NSSM=%BASEDIR%nssm.exe"
-          set "PHP=%BASEDIR%php\php.exe"
-          set "EPS=%BASEDIR%eps.phar"
+          TAG_NAME="${GITHUB_REF_NAME:-manual}"
+          DATE=$(date +%Y%m%d)
+          ZIP_NAME="eps-windows-bundle-${TAG_NAME}-${DATE}.zip"
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
-          if not exist "%NSSM%" (
-            echo nssm.exe not found in %BASEDIR%
-            exit /b 1
-          )
-          if not exist "%PHP%" (
-            echo php.exe not found in %BASEDIR%php\
-            exit /b 2
-          )
-          if not exist "%EPS%" (
-            echo eps.phar not found in %BASEDIR%
-            exit /b 3
-          )
-
-          "%NSSM%" install "%SVCNAME%" "%PHP%" "%EPS%"
-          "%NSSM%" set "%SVCNAME%" AppDirectory "%BASEDIR%"
-          "%NSSM%" start "%SVCNAME%"
-          echo Service "%SVCNAME%" installed and started.
-          ENDLOCAL
-          BAT
-
-          # === STOP SCRIPT ===
-          cat > "$RELEASE_DIR/stop-eps-service.bat" <<'BAT'
-          @echo off
-          REM stop-eps-service.bat
-          REM Stops the eps Windows service
-          SETLOCAL
-          set "SVCNAME=EscPosPrinterServer"
-          set "BASEDIR=%~dp0"
-          set "NSSM=%BASEDIR%nssm.exe"
-
-          if not exist "%NSSM%" (
-            echo nssm.exe not found in %BASEDIR%
-            exit /b 1
-          )
-
-          echo Stopping service "%SVCNAME%"...
-          "%NSSM%" stop "%SVCNAME%"
-          echo Done.
-          ENDLOCAL
-          BAT
-
-          # === UNINSTALL SCRIPT ===
-          cat > "$RELEASE_DIR/uninstall-eps-service.bat" <<'BAT'
-          @echo off
-          REM uninstall-eps-service.bat
-          REM Stops and removes the eps Windows service
-          SETLOCAL
-          set "SVCNAME=EscPosPrinterServer"
-          set "BASEDIR=%~dp0"
-          set "NSSM=%BASEDIR%nssm.exe"
-
-          if not exist "%NSSM%" (
-            echo nssm.exe not found in %BASEDIR%
-            exit /b 1
-          )
-
-          echo Stopping service "%SVCNAME%"...
-          "%NSSM%" stop "%SVCNAME%"
-          timeout /t 2 >nul
-          echo Removing service "%SVCNAME%"...
-          "%NSSM%" remove "%SVCNAME%" confirm
-          echo Service "%SVCNAME%" uninstalled.
-          ENDLOCAL
-          BAT
-
-      - name: Package release assets
+      - name: Compress bundle
         run: |
-          ZIP_NAME="eps-windows-bundle.zip"
           cd "$RELEASE_DIR"
-          zip -r "../$ZIP_NAME" ./*
+          zip -r9 "../${{ steps.zipname.outputs.zip_name }}" .
           cd ..
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-          ls -lh "$ZIP_NAME"
 
-      - name: Upload to GitHub Release
+      # --- Upload to GitHub Release ---
+      - name: Upload ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ${{ env.ZIP_NAME }}
+            ${{ steps.zipname.outputs.zip_name }}

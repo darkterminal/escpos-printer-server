@@ -17,7 +17,8 @@
     ]
   },
   "scripts": {
-    "build": "sh ./build-phar.sh",
+    "create:phar": "sh ./build-phar.sh",
+    "create:bundle": "sh ./make-bundle.sh",
     "release:patch": "./release.sh patch",
     "release:minor": "./release.sh minor",
     "release:major": "./release.sh major"
