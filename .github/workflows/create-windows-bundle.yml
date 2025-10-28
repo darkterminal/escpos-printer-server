@@ -72,8 +72,8 @@ jobs:
       - name: Copy project files into bundle
         run: |
           mkdir -p "$RELEASE_DIR/config" "$RELEASE_DIR/src"
-          cp -r config/ "$RELEASE_DIR/config/" || true
-          cp -r src/ "$RELEASE_DIR/src/" || true
+          cp -r config/ "$RELEASE_DIR/" || true
+          cp -r src/ "$RELEASE_DIR/" || true
           cp composer.json "$RELEASE_DIR/composer.json"
           cp eps "$RELEASE_DIR/eps"
           cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
