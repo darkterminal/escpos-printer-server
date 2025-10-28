@@ -2,7 +2,7 @@
   "name": "darkterminal/escpos-printer-server",
   "description": "The fck'in simple escpos printer server",
   "type": "library",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "require": {
     "workerman/workerman": "^5.1",
     "mike42/escpos-php": "^4.0"
@@ -19,9 +19,9 @@
   "scripts": {
     "create:phar": "sh ./build-phar.sh",
     "create:bundle": "sh ./make-bundle.sh",
-    "release:patch": "./release.sh patch",
-    "release:minor": "./release.sh minor",
-    "release:major": "./release.sh major"
+    "release:patch": "sh ./release.sh patch",
+    "release:minor": "sh ./release.sh minor",
+    "release:major": "sh ./release.sh major"
   },
   "bin": "./eps",
   "authors": [

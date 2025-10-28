@@ -40,7 +40,7 @@ echo "Updated version to $NEW_VERSION in composer.json"
 
 # Step 2: Run the composer build script
 echo "Running build script..."
-composer run build
+composer run create:phar
 
 # Step 3: Git commit and tag
 git add .
