@@ -1,3 +1,9 @@
+## [1.0.9] - 2025-10-28
+
+- release: patch version 1.0.9 [Imam Ali Mustofa]
+- build: fix nested src and config directory [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 1.0.8 [Imam Ali Mustofa]
+
 ## [1.0.8] - 2025-10-28
 
 - release: patch version 1.0.8 [Imam Ali Mustofa]
