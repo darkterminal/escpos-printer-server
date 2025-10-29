@@ -8,29 +8,48 @@
 <p align="center">A simple and efficient ESC/POS printer server built with PHP, <a href="https://github.com/walkor/workerman" target="_blank">Workerman</a> and <a href="https://github.com/mike42/escpos-php" target="_blank">ESC/POS-PHP</a>, providing WebSocket-based printing capabilities for thermal printers.</p>
 
 ## Features
+- **Cross-platform**: Works on Linux, macOS, and Windows.
+- **Multi-interface printer support**:
+  - CUPS
+  - Ethernet
+  - Linux-USB
+  - SMB
+  - Windows-USB
+  - Windows-LPT
+- **WebSocket Server** for real-time receipt printing.
+- **Built-in Web GUI configuration** accessible via HTTP.
+- **Customizable receipt templates** (Epson or custom).
+- **Cash drawer control** using ESC/POS pulse command.
+- **Structured JSON configuration** for easy setup.
+- **Logging system** with rotating daily logs.
+- **Printer testing utility**.
+- **Bundled Windows service installer (via NSSM).**
 
-- **Multi-Interface Supports**: CUPS, Ethernet, Linux-USB, SMB, Windows-USB, and Windows-LPT
-- **WebSocket Server**: Real-time communication via WebSocket protocol
-- **Template System**: Configurable Receipt templates (Epson and Custom)
-- **Cash Drawer Control**: Open cash drawer with pulse command
-- **Customizable Receipts**: Flexible header, footer, and content formatting
-- **Easy Configuration**: Simple JSON-based configuration
-- **Comprehensive Logging**: Built-in logging with daily log files
-- **Testing Utilities**: Built-in printer testing functionality
-- **Web GUI Configuration**: Built-in Web GUI configuration
+## Architecture Overview
+The eps (ESC/POS Printer Server) executable bridges your web or desktop application and the thermal printer.
+1. The client app (browser, POS app, or API) connects via WebSocket.
+2. The EPS server receives JSON payloads and translates them to ESC/POS commands.
+3. Commands are sent to the connected printer via the configured interface.
 
-## How It Works?
+## Installation
 
-The ESC/POS Printer Server operates as a bridge between an Online Web Application and a Thermal Printer, utilizing a WebSocket Server powered by the `eps` (ESC/POS Printer Server) executable file, enabling the application to interact via a WebSocket Client (Browser) with the WebSocket Server (`eps`) and sending ESC/POS commands to the thermal printer that plug into local device.
+### Windows
+### Linux/MacOS
 
-## Printer Interfaces
+## Build from Source
 
-- `cups` - The standards-based, open source printing system
-- `ethernet` - Print via Ethernet interface
-- `linux-usb` - Print via USB interface on Linux systems
-- `smb` - Print via SMB (Server Message Block) protocol
-- `windows-usb` - Print via USB interface on Windows systems
-- `windows-lpt` - Print via LPT (Line Printer) protocol on Windows systems
+### 1. Clone Repository
+```bash
+git clone https://github.com/darkterminal/escpos-printer-server.git
+cd escpos-printer-server
+```
 
-## Usage
+### 2. Install Dependencies
+```bash
+composer install
+```
 
+## Running the Server
+
+### Windows 
+### Linux/MacOs

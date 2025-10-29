@@ -4,8 +4,8 @@
   "printer_settings": {
     "printer_name": "IW-8001",
     "interface": "ethernet",
-    "printer_host": "192.168.1.150",
-    "printer_port": 9100,
+    "printer_host": "localhost",
+    "printer_port": 1100,
     "template": "epson",
     "pull_cash_drawer": true,
     "line_feed_each_in_items": 1,

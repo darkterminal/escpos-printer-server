@@ -248,7 +248,16 @@
         }
 
         const apiBase = "/api/config";
-        const wsServer = "ws://100.115.170.62:3005";
+        let wsServer = "ws://localhost:1945";
+
+        async function fetchConfig() {
+            const res = await fetch(apiBase);
+            const data = await res.json();
+
+            const ps = data.printer_settings || {};
+            wsServer = `ws://${ps.printer_host}:${ps.printer_port}`;
+        }
+        fetchConfig();
         
         const el = id => document.getElementById(id);
 
