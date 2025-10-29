@@ -1,3 +1,9 @@
+## [1.0.10] - 2025-10-30
+
+- release: patch version 1.0.10 [Imam Ali Mustofa]
+- chore: fix websocket client connection [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 1.0.9 [Imam Ali Mustofa]
+
 ## [1.0.9] - 2025-10-28
 
 - release: patch version 1.0.9 [Imam Ali Mustofa]
