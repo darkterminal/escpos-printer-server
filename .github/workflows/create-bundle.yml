@@ -28,14 +28,30 @@ jobs:
           extensions: intl, sockets, openssl
           coverage: none
 
+      # --- Cache Composer dependencies ---
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            vendor
+            ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # --- Install dependencies ---
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
+
+      # --- Install Box locally (PHAR builder) ---
+      - name: Install Box project dependency
+        run: composer require --dev humbug/box
 
       # --- Build PHAR binary ---
       - name: Build PHAR binary
         run: |
-          composer global require humbug/box
-          composer run create:phar
+          chmod +x build-phar.sh
+          ./build-phar.sh
           ls -la bin/
 
       # --- Prepare release directory ---
@@ -77,7 +93,7 @@ jobs:
             echo "extension_dir=ext"
           } >> "$RELEASE_DIR/php/php.ini"
 
-      # --- Copy project files into bundle ---
+      # --- Copy application files ---
       - name: Copy application files
         run: |
           mkdir -p "$RELEASE_DIR/config" "$RELEASE_DIR/src"
