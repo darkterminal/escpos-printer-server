@@ -1,3 +1,9 @@
+## [2.0.2] - 2025-10-30
+
+- release: patch version 2.0.2 [Imam Ali Mustofa]
+- build: fix box build [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 2.0.1 [Imam Ali Mustofa]
+
 ## [2.0.1] - 2025-10-30
 
 - release: patch version 2.0.1 [Imam Ali Mustofa]
