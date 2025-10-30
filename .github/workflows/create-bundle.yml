@@ -1,4 +1,4 @@
-name: Build & Release Windows Bundle
+name: Build & Release Bundle
 
 on:
   release:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- Install PHP & Composer ---
+      # --- Setup PHP environment ---
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -28,10 +28,16 @@ jobs:
           extensions: intl, sockets, openssl
           coverage: none
 
-      - name: Install Composer dependencies (Linux PHP)
+      - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      # --- Prepare bundle directory ---
+      # --- Build PHAR binary ---
+      - name: Build PHAR binary
+        run: |
+          composer run create:phar
+          ls -la bin/
+
+      # --- Prepare release directory ---
       - name: Prepare release directory
         run: |
           rm -rf "$RELEASE_DIR"
@@ -44,7 +50,7 @@ jobs:
           unzip -q /tmp/nssm.zip -d /tmp/nssm_unpack
           find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
 
-      # --- Find latest PHP Windows build ---
+      # --- Find latest PHP 8.4 Windows build ---
       - name: Find latest PHP 8.4 Windows build
         id: php
         run: |
@@ -55,7 +61,7 @@ jobs:
           fi
           echo "php_zip=$PHP_ZIP" >> $GITHUB_OUTPUT
 
-      # --- Download & unpack PHP for Windows bundle ---
+      # --- Download & unpack PHP for Windows ---
       - name: Download and unpack PHP (Windows build)
         run: |
           curl -L -o /tmp/php.zip "https://windows.php.net/downloads/releases/${{ steps.php.outputs.php_zip }}"
@@ -63,41 +69,57 @@ jobs:
           mkdir -p "$RELEASE_DIR/php"
           cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/"
           cp "$RELEASE_DIR/php/php.ini-production" "$RELEASE_DIR/php/php.ini"
-          echo "extension=intl" >> "$RELEASE_DIR/php/php.ini"
-          echo "extension=sockets" >> "$RELEASE_DIR/php/php.ini"
-          echo "extension=openssl" >> "$RELEASE_DIR/php/php.ini"
-          echo "extension_dir=ext" >> "$RELEASE_DIR/php/php.ini"
+          {
+            echo "extension=intl"
+            echo "extension=sockets"
+            echo "extension=openssl"
+            echo "extension_dir=ext"
+          } >> "$RELEASE_DIR/php/php.ini"
 
-      # --- Copy application files ---
-      - name: Copy project files into bundle
+      # --- Copy project files into bundle ---
+      - name: Copy application files
         run: |
           mkdir -p "$RELEASE_DIR/config" "$RELEASE_DIR/src"
-          cp -r config/ "$RELEASE_DIR/" || true
-          cp -r src/ "$RELEASE_DIR/" || true
+          cp -r config/ "$RELEASE_DIR/config/"
+          cp -r src/ "$RELEASE_DIR/src/"
           cp composer.json "$RELEASE_DIR/composer.json"
           cp eps "$RELEASE_DIR/eps"
+          cp bin/eps.phar "$RELEASE_DIR/eps.phar"
           cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
           cp scripts/eps-uninstall.bat "$RELEASE_DIR/eps-uninstall.bat"
           cp -r vendor "$RELEASE_DIR/vendor"
 
-      # --- Create tagged ZIP bundle ---
-      - name: Create ZIP filename
-        id: zipname
+      # --- Generate ZIP filenames ---
+      - name: Define ZIP filenames
+        id: names
         run: |
           TAG_NAME="${GITHUB_REF_NAME:-manual}"
           DATE=$(date +%Y%m%d)
-          ZIP_NAME="eps-windows-bundle-${TAG_NAME}-${DATE}.zip"
-          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+          ZIP_WINDOWS="eps-windows-bundle-${TAG_NAME}-${DATE}.zip"
+          ZIP_PHAR="eps-unix-bundle-${TAG_NAME}-${DATE}.zip"
+          echo "zip_windows=$ZIP_WINDOWS" >> $GITHUB_OUTPUT
+          echo "zip_phar=$ZIP_PHAR" >> $GITHUB_OUTPUT
 
-      - name: Compress bundle
+      # --- Compress Windows bundle ---
+      - name: Create Windows ZIP bundle
         run: |
           cd "$RELEASE_DIR"
-          zip -r9 "../${{ steps.zipname.outputs.zip_name }}" .
+          zip -r9 "../${{ steps.names.outputs.zip_windows }}" .
           cd ..
 
-      # --- Upload to GitHub Release ---
-      - name: Upload ZIP to GitHub Release
-        uses: softprops/action-gh-release@v1
+      # --- Compress standalone PHAR ---
+      - name: Create standalone PHAR ZIP
+        run: |
+          mkdir -p dist
+          cp bin/eps.phar dist/
+          cd dist
+          zip -r9 "../${{ steps.names.outputs.zip_phar }}" eps.phar
+          cd ..
+
+      # --- Upload artifacts to GitHub Release ---
+      - name: Upload ZIP files to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.zipname.outputs.zip_name }}
+            ${{ steps.names.outputs.zip_windows }}
+            ${{ steps.names.outputs.zip_phar }}
