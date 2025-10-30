@@ -1,3 +1,10 @@
+## [2.0.0] - 2025-10-30
+
+- release: major version 2.0.0 [Imam Ali Mustofa]
+- chore: add link [Imam Ali Mustofa]
+- docs: update the docs and update bundle action [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 1.0.10 [Imam Ali Mustofa]
+
 ## [1.0.10] - 2025-10-30
 
 - release: patch version 1.0.10 [Imam Ali Mustofa]
