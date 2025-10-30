@@ -8,8 +8,8 @@
 <p align="center">A simple and efficient ESC/POS printer server built with PHP, <a href="https://github.com/walkor/workerman" target="_blank">Workerman</a> and <a href="https://github.com/mike42/escpos-php" target="_blank">ESC/POS-PHP</a>, providing WebSocket-based printing capabilities for thermal printers.</p>
 
 <p align="center">
-  <img alt="Static Badge" src="https://img.shields.io/badge/Donate-Saweria-blue?link=https%3A%2F%2Fsaweria.co%2Fdarkterminal">
-  <img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/darkterminal">
+  <a href="https://saweria.co/darkterminal" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Donate-Saweria-blue"></a>
+  <a href="https://github.com/sponsors/darkterminal" target="_blank"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/darkterminal"></a>
   <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/darkterminal/escpos-printer-server/create-bundle.yml">
   <img alt="GitHub License" src="https://img.shields.io/github/license/darkterminal/escpos-printer-server">
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/darkterminal/escpos-printer-server">
