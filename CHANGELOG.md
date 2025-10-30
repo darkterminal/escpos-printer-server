@@ -1,3 +1,9 @@
+## [2.0.1] - 2025-10-30
+
+- release: patch version 2.0.1 [Imam Ali Mustofa]
+- build: install box before create phar [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for major version 2.0.0 [Imam Ali Mustofa]
+
 ## [2.0.0] - 2025-10-30
 
 - release: major version 2.0.0 [Imam Ali Mustofa]
