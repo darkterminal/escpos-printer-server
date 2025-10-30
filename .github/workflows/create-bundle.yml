@@ -34,6 +34,7 @@ jobs:
       # --- Build PHAR binary ---
       - name: Build PHAR binary
         run: |
+          composer global require humbug/box
           composer run create:phar
           ls -la bin/
 
