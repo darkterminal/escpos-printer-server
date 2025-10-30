@@ -1,3 +1,9 @@
+## [2.0.3] - 2025-10-30
+
+- release: patch version 2.0.3 [Imam Ali Mustofa]
+- build: why my imagination is not working [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 2.0.2 [Imam Ali Mustofa]
+
 ## [2.0.2] - 2025-10-30
 
 - release: patch version 2.0.2 [Imam Ali Mustofa]
