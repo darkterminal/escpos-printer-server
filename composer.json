@@ -2,7 +2,7 @@
   "name": "darkterminal/escpos-printer-server",
   "description": "The fck'in simple escpos printer server",
   "type": "library",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "require": {
     "workerman/workerman": "^5.1",
     "mike42/escpos-php": "^4.0"
