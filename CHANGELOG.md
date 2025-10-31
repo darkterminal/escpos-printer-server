@@ -1,3 +1,9 @@
+## [2.0.4] - 2025-10-31
+
+- release: patch version 2.0.4 [Imam Ali Mustofa]
+- refactor: stupid payload documentation and core server logic [Imam Ali Mustofa]
+- chore: update CHANGELOG.md for patch version 2.0.3 [Imam Ali Mustofa]
+
 ## [2.0.3] - 2025-10-30
 
 - release: patch version 2.0.3 [Imam Ali Mustofa]
