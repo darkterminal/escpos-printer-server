@@ -99,7 +99,7 @@ ESC/POS Printer Server is already installed on Windows Service Manager.
 ## Web GUI & Integration
 
 - Web GUI on: `http://localhost:1100`
-- ESC/POS WebSocket Server: `http://localhost:1945`
+- ESC/POS WebSocket Server: `ws://localhost:1945`
 
 ### Printer Settings Payload
 
