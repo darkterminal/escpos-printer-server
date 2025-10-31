@@ -26,7 +26,9 @@
                 ESC/POS Printer Configuration
             </h1>
             <div class="flex items-center gap-2">
-                <div id="indicatorBadge" class="bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm">Status: <span id="printerIndicatorStatus">Online</span></div>
+                <div id="indicatorBadge" class="bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm">Status:
+                    <span id="printerIndicatorStatus">Online</span>
+                </div>
                 <button id="reloadBtn" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">🔄</button>
             </div>
         </div>
@@ -258,7 +260,7 @@
             wsServer = `ws://${ps.printer_host}:${ps.printer_port}`;
         }
         fetchConfig();
-        
+
         const el = id => document.getElementById(id);
 
         const indicator = el('printerIndicatorStatus');
@@ -339,28 +341,45 @@
         }
 
         async function testPrinter() {
+            const date_transaction = (new Date()).toISOString().slice(0, 10);
+
             const config = buildConfig();
             const receiptData = Object.assign(config, {
-                "receipt_data": [
-                    {
-                        "item_name": "Kopi Robusta 250gr",
-                        "price": 45000,
-                        "qty": 2,
-                        "sub_total": 90000
+                "receipt_data": {
+                    "app_name": "XYZ MART",
+                    "full_name": "Wagiman Artomoro",
+                    "transaction": {
+                        "date_transaction": date_transaction,
+                        "transaction": "TRX20251028001",
+                        "customer_name": "Wulan Wedari",
+                        "tax": 3000,
+                        "member_discount": 2000,
+                        "total_transaction": 90000,
+                        "paid": 100000,
+                        "paid_return": 10000,
+                        "payment": "Cash",
+                        "deposit": 0,
+                        "due_date": null
                     },
-                    {
-                        "item_name": "Gula Aren Premium 500gr",
-                        "price": 38000,
-                        "qty": 1,
-                        "sub_total": 38000
-                    },
-                    {
-                        "item_name": "Camilan Kacang Panggang",
-                        "price": 15000,
-                        "qty": 2,
-                        "sub_total": 30000
-                    }
-                ]
+                    "cart": [
+                        {
+                            "item_name": "Kopi Robusta 250gr",
+                            "price": 45000,
+                            "qty": 2,
+                            "sub_total": 90000
+                        },
+                        {
+                            "item_name": "Gula Aren Premium 500gr",
+                            "price": 38000,
+                            "qty": 1,
+                            "sub_total": 38000
+                        }
+                    ],
+                    "promo": [
+                        "Beli 2 gratis 1 untuk produk tertentu",
+                        "Diskon member 10% untuk semua kopi lokal"
+                    ]
+                }
             });
             // Send websocket data to test printer
             ws.send(JSON.stringify(receiptData));

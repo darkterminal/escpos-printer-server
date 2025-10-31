@@ -110,12 +110,46 @@ class ReceiptPrinter
             $connector = new DummyPrintConnector();
             CapabilityProfile::load("TSP600");
             $printer = new Printer($connector);
+            
+            // Validate receipt data
+            $this->validateReceiptData($this->receiptData);
 
-            $printer->initialize();
-            $printer->setJustification(Printer::JUSTIFY_CENTER);
-            $printer->text("PRINTER TEST\n");
-            $printer->text("Date: " . date('Y-m-d H:i:s') . "\n");
-            $printer->text("Printer: " . ($this->printerSettings['printer_name'] ?? 'Unknown') . "\n");
+            // Print all sections
+            $this->printHeader(
+                $printer,
+                $this->receiptData,
+                $this->printerSettings
+            );
+            $this->printSubHeader(
+                $printer,
+                $this->receiptData,
+                $this->printerSettings
+            );
+            $this->printOperatorDetails(
+                $printer,
+                $this->receiptData,
+                $this->printerSettings
+            );
+            $this->printShoppingDetails(
+                $printer, 
+                $this->receiptData, 
+                $this->printerSettings
+            );
+            $this->printPromoSection(
+                $printer, 
+                $this->receiptData, 
+                $this->printerSettings
+            );
+            $this->printFooter(
+                $printer, 
+                $this->receiptData, 
+                $this->printerSettings
+            );
+            $this->printSubFooter(
+                $printer, 
+                $this->printerSettings
+            );
+
             $printer->feed(2);
             $printer->cut();
 
@@ -171,10 +205,6 @@ class ReceiptPrinter
             if (!isset($receiptData[$field])) {
                 throw new \Exception("Missing required receipt field: $field");
             }
-        }
-
-        if (!is_array($receiptData['receipt_data'])) {
-            throw new \Exception('Receipt data must be an array');
         }
 
         if (isset($receiptData['transaction'])) {

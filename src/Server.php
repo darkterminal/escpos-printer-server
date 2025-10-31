@@ -98,6 +98,8 @@ class Server implements PrinterServer
             $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
             $this->info("Received data: " . ($data ? json_encode($data) : "unknown"));
 
+            print_r($data);
+
             if (!isset($data['from'], $data['printer_name'], $data['printer_settings'])) {
                 throw new \InvalidArgumentException('Invalid payload: Missing required fields (from, printer_name, printer_settings)');
             }
