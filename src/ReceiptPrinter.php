@@ -156,6 +156,8 @@ class ReceiptPrinter
             $data = $connector->getData();
 
             echo $data . PHP_EOL;
+            
+            $this->debug($data);
 
             $printer->close();
 
