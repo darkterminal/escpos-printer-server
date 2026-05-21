@@ -31,6 +31,14 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
+      # --- Build PHAR (optional) ---
+      # Ensure a PHAR is available for the standalone PHAR bundle. This installs dev deps
+      # and runs the project's build script if possible; failure is non-fatal.
+      - name: Build PHAR (if possible)
+        run: |
+          composer install --no-interaction
+          composer run create:phar || true
+
       # --- Prepare release directory ---
       - name: Prepare release directory
         run: |
@@ -73,12 +81,17 @@ jobs:
       # --- Copy project files into bundle ---
       - name: Copy application files
         run: |
-          mkdir -p "$RELEASE_DIR/config" "$RELEASE_DIR/src"
-          cp -r config/ "$RELEASE_DIR/config/"
-          cp -r src/ "$RELEASE_DIR/src/"
+          # Copy top-level config and src directories into the bundle root (avoid nested/duplicate dirs)
+          cp -r config "$RELEASE_DIR/"
+          cp -r src "$RELEASE_DIR/"
           cp composer.json "$RELEASE_DIR/composer.json"
           cp eps "$RELEASE_DIR/eps"
-          cp bin/eps.phar "$RELEASE_DIR/eps.phar"
+          # Copy PHAR only if present (built above); avoid failing the job if missing
+          if [ -f bin/eps.phar ]; then
+            cp bin/eps.phar "$RELEASE_DIR/eps.phar"
+          else
+            echo "Warning: bin/eps.phar not found; PHAR bundle will be empty"
+          fi
           cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
           cp scripts/eps-uninstall.bat "$RELEASE_DIR/eps-uninstall.bat"
           cp -r vendor "$RELEASE_DIR/vendor"

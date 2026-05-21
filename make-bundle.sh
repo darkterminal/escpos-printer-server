@@ -39,9 +39,11 @@ echo "extension_dir=ext" >> "$RELEASE_DIR/php/php.ini"
 ls -la "$RELEASE_DIR/php" | head -n 20
 
 mkdir -p "$RELEASE_DIR/config/"
-cp -r config/ "$RELEASE_DIR/"
+# Copy the whole `config` directory into the bundle so it appears as "$RELEASE_DIR/config"
+cp -r config "$RELEASE_DIR/"
 mkdir -p "$RELEASE_DIR/src/"
-cp -r src/ "$RELEASE_DIR/"
+# Copy the whole `src` directory into the bundle so it appears as "$RELEASE_DIR/src"
+cp -r src "$RELEASE_DIR/"
 cp composer.json "$RELEASE_DIR/composer.json"
 cp eps "$RELEASE_DIR/eps"
 
