@@ -5,15 +5,18 @@
       <img alt="Shows a black logo in light color mode and a white one in dark color mode." src="assets/eps-black.png">
     </picture>
 </p>
-<p align="center">A simple and efficient ESC/POS printer server built with PHP, <a href="https://github.com/walkor/workerman" target="_blank">Workerman</a> and <a href="https://github.com/mike42/escpos-php" target="_blank">ESC/POS-PHP</a>, providing WebSocket-based printing capabilities for thermal printers.</p>
+<p align="center">A simple and efficient ESC/POS printer server built with PHP (>= 8.3), <a href="https://github.com/walkor/workerman" target="_blank">Workerman</a> (^5.2) and <a href="https://github.com/mike42/escpos-php" target="_blank">ESC/POS-PHP</a> (^5.0), providing WebSocket-based printing capabilities for thermal printers.</p>
 
 <p align="center">
   <a href="https://saweria.co/darkterminal" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Donate-Saweria-blue"></a>
   <a href="https://github.com/sponsors/darkterminal" target="_blank"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/darkterminal"></a>
   <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/darkterminal/escpos-printer-server/create-bundle.yml">
+  <img alt="GitHub Actions Tests Workflow" src="https://img.shields.io/github/actions/workflow/status/darkterminal/escpos-printer-server/tests.yml">
   <img alt="GitHub License" src="https://img.shields.io/github/license/darkterminal/escpos-printer-server">
   <img alt="GitHub Release" src="https://img.shields.io/github/v/release/darkterminal/escpos-printer-server">
 </p>
+
+**Latest release: [`2.0.7`](https://github.com/darkterminal/escpos-printer-server/releases/tag/2.0.7)** — dependency modernization and deprecation cleanup.
 
 ## Features
 - **Cross-platform**: Works on Linux, macOS, and Windows.
@@ -32,6 +35,8 @@
 - **Logging system** with rotating daily logs.
 - **Printer testing utility**.
 - **Bundled Windows service installer (via NSSM).**
+- **Modern industrial-styled Web GUI** for configuration and printer checks.
+- **Reproducible release bundles** with checksum and layout verification.
 
 ## Architecture Overview
 The eps (ESC/POS Printer Server) executable bridges your web or desktop application and the thermal printer.
@@ -87,6 +92,12 @@ composer run create:phar
 ```
 > Note: Phar is generated inside `bin` directory. The `config/` directory is bundled into the PHAR, so the Web GUI assets ship with the artifact.
 
+### 4. Build Windows Bundle (optional)
+```bash
+composer run create:bundle
+```
+> Note: Produces the Windows release bundle (application files, PHP runtime, and NSSM) for packaging.
+
 ## Usage
 
 ### Windows
@@ -95,9 +106,9 @@ ESC/POS Printer Server is already installed on Windows Service Manager.
 
 ### Linux/MacOS
 
-1. Open your terminal inside extracted content
-2. the run this command `php eps.phar start` or `php eps.phar start -d` to run as a daemon.
-3. On first start, `printer-settings.json` is created next to `eps.phar`; the Web GUI is served from the bundled `config/settings.html` asset.
+1. Open your terminal in the extracted directory.
+2. run this command `php bin/eps.phar start` or `php bin/eps.phar start -d` to run as a daemon.
+3. On first start, `printer-settings.json` is created next to `bin/eps.phar`; the Web GUI is served from the bundled `config/settings.html` asset.
 
 ## Web GUI & Integration
 
@@ -369,4 +380,14 @@ ws.onopen = () => ws.send(JSON.stringify(escposPayload));
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) to contribte this project.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to contribute to this project.
+
+By participating, you agree to uphold the [Code of Conduct](CONTRIBUTING.md#code-of-conduct).
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history and notes.
