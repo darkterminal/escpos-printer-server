@@ -10,6 +10,7 @@ use Mike42\Escpos\PrintConnectors\CupsPrintConnector;
 use Mike42\Escpos\PrintConnectors\DummyPrintConnector;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
+use Mike42\Escpos\PrintConnectors\PrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 use Mike42\Escpos\Printer;
 
@@ -165,6 +166,33 @@ class ReceiptPrinter
         } catch (\Exception $e) {
             $this->error('Printer test failed: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Check the configured printer connection without printing a receipt.
+     *
+     * A connector may be injected for testing; production calls use the
+     * connector built from the current printer settings.
+     */
+    public function checkPrinter(?PrintConnector $connector = null): array
+    {
+        try {
+            $connector ??= $this->createPrinterConnector($this->printerSettings);
+            $printer = new Printer($connector);
+            $printer->initialize();
+            $printer->close();
+
+            $this->info('Printer check succeeded (' . $this->printerSettings['interface'] . ')');
+
+            return [
+                'ok' => true,
+                'interface' => $this->printerSettings['interface'],
+                'host' => $this->printerSettings['printer_host'] ?? '',
+            ];
+        } catch (\Throwable $e) {
+            $this->error('Printer check failed: ' . $e->getMessage());
+            throw new \RuntimeException('Printer check failed: ' . $e->getMessage(), 0, $e);
         }
     }
 

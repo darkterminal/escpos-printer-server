@@ -31,13 +31,21 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      # --- Build PHAR (optional) ---
-      # Ensure a PHAR is available for the standalone PHAR bundle. This installs dev deps
-      # and runs the project's build script if possible; failure is non-fatal.
-      - name: Build PHAR (if possible)
+      # --- Install Box for PHAR builds ---
+      - name: Install Box
+        run: composer global require humbug/box:^4.7 --no-interaction
+
+      # --- Build PHAR ---
+      # The build installs dev dependencies and must succeed for the release to proceed.
+      - name: Build PHAR
         run: |
           composer install --no-interaction
-          composer run create:phar || true
+          composer run create:phar
+
+      # --- Verify bundled assets ---
+      - name: Verify PHAR assets
+        run: |
+          php -r '$p=new Phar("bin/eps.phar"); foreach(["config/settings.html","config/printer-settings.json"] as $f){if(!isset($p[$f])){fwrite(STDERR,"missing $f\n");exit(1);}} echo "phar assets ok\n";'
 
       # --- Prepare release directory ---
       - name: Prepare release directory

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>ESC/POS Printer Settings</title>
+    <script>const EPS_TOKEN = __EPS_TOKEN_JSON__;</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -39,6 +40,7 @@
             <select id="from" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2">
                 <option value="posclient">posclient</option>
                 <option value="testprinter">testprinter</option>
+                <option value="checkprinter">checkprinter</option>
                 <option value="pullcashdrawer">pullcashdrawer</option>
             </select>
         </div>
@@ -157,6 +159,8 @@
         <div class="flex justify-end mt-6 gap-4">
             <button id="testBtn" class="bg-red-500 hover:bg-red-700 px-6 py-2 rounded-lg font-semibold">Test
                 Printer</button>
+            <button id="checkBtn" class="bg-blue-500 hover:bg-blue-700 px-6 py-2 rounded-lg font-semibold">Check
+                Connection</button>
             <button id="saveBtn" class="bg-primary hover:bg-accent px-6 py-2 rounded-lg font-semibold">Save</button>
             <button id="showJsonBtn" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-lg font-semibold">View
                 JSON</button>
@@ -253,7 +257,7 @@
         let wsServer = "ws://localhost:1945";
 
         async function fetchConfig() {
-            const res = await fetch(apiBase);
+            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
             const data = await res.json();
 
             const ps = data.printer_settings || {};
@@ -287,9 +291,27 @@
             console.error("⚠️ WebSocket error:", err);
         });
 
+        let awaitingPrinterCheck = false;
+
+        ws.on("message", (msg) => {
+            if (!awaitingPrinterCheck) {
+                return;
+            }
+            awaitingPrinterCheck = false;
+
+            const reply = String(msg.data ?? msg);
+            if (reply.includes("Printer connection OK")) {
+                indicator.innerText = "Connection OK";
+                alert("✅ " + reply);
+            } else {
+                indicator.innerText = "Check failed";
+                alert("⚠️ " + reply);
+            }
+        });
+
         // Load config
         async function loadConfig() {
-            const res = await fetch(apiBase);
+            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
             const data = await res.json();
             const ps = data.printer_settings || {};
             const lang = ps.custom_language || {};
@@ -322,6 +344,7 @@
             langKeys.forEach(k => custom_language[k] = el("lang_" + k).value);
 
             return {
+                auth_token: EPS_TOKEN,
                 from: el("from").value,
                 printer_name: el("printer_name").value,
                 printer_settings: {
@@ -385,11 +408,19 @@
             ws.send(JSON.stringify(receiptData));
         }
 
+        async function checkPrinter() {
+            const config = buildConfig();
+            config.from = "checkprinter";
+            awaitingPrinterCheck = true;
+            ws.send(JSON.stringify(config));
+        }
+
         async function saveConfig() {
             const config = buildConfig();
+            delete config.auth_token;
             await fetch(apiBase, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", 'X-EPS-Token': EPS_TOKEN },
                 body: JSON.stringify(config, null, 2)
             });
             alert("✅ Configuration saved successfully!");
@@ -414,6 +445,7 @@
         el("saveBtn").onclick = saveConfig;
         el("reloadBtn").onclick = loadConfig;
         el("testBtn").onclick = testPrinter;
+        el("checkBtn").onclick = checkPrinter;
 
         loadConfig();
     </script>

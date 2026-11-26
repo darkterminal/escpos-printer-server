@@ -83,7 +83,7 @@ composer install
 ```bash
 composer run create:phar
 ```
-> Note: Phar is generated inside `bin` directory
+> Note: Phar is generated inside `bin` directory. The `config/` directory is bundled into the PHAR, so the Web GUI assets ship with the artifact.
 
 ## Usage
 
@@ -95,6 +95,7 @@ ESC/POS Printer Server is already installed on Windows Service Manager.
 
 1. Open your terminal inside extracted content
 2. the run this command `php eps.phar start` or `php eps.phar start -d` to run as a daemon.
+3. On first start, `printer-settings.json` is created next to `eps.phar`; the Web GUI is served from the bundled `config/settings.html` asset.
 
 ## Web GUI & Integration
 
@@ -104,6 +105,16 @@ ESC/POS Printer Server is already installed on Windows Service Manager.
 ### Printer Settings Payload
 
 ![Printer Settings Payload](https://i.imgur.com/8Rfx2jT.png)
+
+## Authentication
+
+WebSocket print jobs and HTTP `GET`/`POST /api/config` requests are protected by an optional shared token.
+
+- If `EPS_AUTH_TOKEN` is unset, only loopback clients (`127.0.0.1` and `::1`) are accepted. Remote POS terminals and remote GUI clients are rejected.
+- To serve remote clients, set `EPS_AUTH_TOKEN` in the service environment, restart the server, and include the same value as `auth_token` in every WebSocket payload or as the `X-EPS-Token` header on `/api/config` requests. The bundled Web GUI injects the token into its served page automatically; operators do not need to paste it in.
+
+The token is sent only in the `X-EPS-Token` header or the WebSocket `auth_token` field and is not persisted in `printer-settings.json`.
+This is one shared token for every client, not per-user authentication; treat it as a secret. Anyone who can load the Web GUI page can see the injected token, so keep the GUI on loopback or behind TLS. TLS termination is the operator's responsibility; the built-in HTTP and WebSocket listeners are not encrypted.
 
 ## WebSocket Communication
 
@@ -121,16 +132,24 @@ This object contains the print source, printer configuration, and receipt data.
 }
 ```
 
+### Check Printer Connection
+
+Use `checkprinter` to open the configured printer connection and return a result without printing paper. The reply is a status message such as `[SUCCESS] Printer connection OK (ethernet)`; a connection failure returns an error message. `receipt_data` is not required. The `testprinter` source remains the no-printer receipt preview and does not contact the configured printer.
+
+```json
+{ "from": "checkprinter", "printer_name": "IW-8001", "printer_settings": { "interface": "ethernet", "printer_host": "192.168.1.150", "printer_port": 9100, "template": "epson" } }
+```
+
 ---
 
 **Top-Level Fields**
 
 | Key                | Type     | Required | Description                                                                                                                                                                                     |
 | ------------------ | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `from`             | `string` | **Yes**  | Identifier for the client or request source. Used to distinguish between standard printing, test prints, or cash drawer triggers. Examples: `"posclient"`, `"testprinter"`, `"pullcashdrawer"`. |
+| `from`             | `string` | **Yes**  | Identifier for the client or request source. Used to distinguish between standard printing, test prints, connectivity checks, or cash drawer triggers. Examples: `"posclient"`, `"testprinter"`, `"checkprinter"`, `"pullcashdrawer"`. |
 | `printer_name`     | `string` | **Yes**  | The system-recognized printer name. On Linux (CUPS) it matches the printer queue name; on Windows it matches the printer’s registered device name.                                              |
 | `printer_settings` | `object` | **Yes**  | Printer configuration and behavior options. Defines how the server connects to the printer, layout preferences, and text settings.                                                              |
-| `receipt_data`     | `object` | **Yes**  | Contains all data that will be printed on the receipt, including header, items, totals, and optional promotional or footer sections.                                                            |
+| `receipt_data`     | `object` | Conditional | Required for `"posclient"` and `"testprinter"`; optional for other sources. Contains all data that will be printed on the receipt, including header, items, totals, and optional promotional or footer sections. |
 
 ---
 
@@ -330,6 +349,12 @@ Each field maps to a specific section printed by `ReceiptPrinter`.
   }
 }
 ```
+
+### Validation and errors
+
+Every WebSocket message is validated before printing. `from`, `printer_name`, and `printer_settings` (including its `interface`) are required; `receipt_data` is required only for `posclient` and `testprinter` and must contain `app_name`, `full_name`, a `transaction` object with `date_transaction`, `transaction`, and `total_transaction`, plus a non-empty `cart` of items. Numeric fields accept either JSON numbers or numeric strings (for example `"9100"` and `"45000"`); whole values are normalized to integers and fractional values remain floats. Unknown keys are preserved and ignored by the validator.
+
+Every request receives exactly one timestamped string response, for example `[2025/10/28 08:30:00][SUCCESS] Receipt printed successfully`. Invalid payloads and errors produce a single `[ERROR]` string response instead; there is no JSON response envelope.
 
 ### WebSocket Client Example (JavaScript)
 

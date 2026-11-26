@@ -78,7 +78,7 @@ Please include:
 Example:
 
 ```
-[Feature] Add WebSocket authentication using API tokens
+[Feature] Extend the implemented WebSocket API-token auth with per-terminal keys
 ```
 
 ---
@@ -87,7 +87,7 @@ Example:
 
 ### Prerequisites
 
-- PHP >= 8.1
+- PHP >= 8.3
     - Extension should enabled:
         - sockets
         - intl
@@ -159,6 +159,8 @@ composer run lint
 ## Testing
 
 Tests are written using [PestPHP](https://pestphp.com/) for simplicity and readability.
+
+`composer test` and `composer lint` are the canonical local checks and mirror the `Tests` CI job; lint currently checks the `tests/` tree while pre-existing `src/` formatting cleanup is tracked separately.
 
 Run all tests:
 

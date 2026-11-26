@@ -1,5 +1,5 @@
 {
-  "directories": ["src", "vendor"],
+  "directories": ["src", "vendor", "config"],
   "files": ["composer.json"],
   "exclude-composer-files": false,
   "exclude-dev-files": false,
