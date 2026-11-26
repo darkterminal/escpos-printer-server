@@ -389,6 +389,7 @@
 
         async function saveConfig() {
             const config = buildConfig();
+            delete config.auth_token;
             await fetch(apiBase, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", 'X-EPS-Token': EPS_TOKEN },

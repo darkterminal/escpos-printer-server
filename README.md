@@ -113,6 +113,7 @@ WebSocket print jobs and HTTP `GET`/`POST /api/config` requests are protected by
 - If `EPS_AUTH_TOKEN` is unset, only loopback clients (`127.0.0.1` and `::1`) are accepted. Remote POS terminals and remote GUI clients are rejected.
 - To serve remote clients, set `EPS_AUTH_TOKEN` in the service environment, restart the server, and include the same value as `auth_token` in every WebSocket payload or as the `X-EPS-Token` header on `/api/config` requests. The bundled Web GUI injects the token into its served page automatically; operators do not need to paste it in.
 
+The token is sent only in the `X-EPS-Token` header or the WebSocket `auth_token` field and is not persisted in `printer-settings.json`.
 This is one shared token for every client, not per-user authentication; treat it as a secret. Anyone who can load the Web GUI page can see the injected token, so keep the GUI on loopback or behind TLS. TLS termination is the operator's responsibility; the built-in HTTP and WebSocket listeners are not encrypted.
 
 ## WebSocket Communication
