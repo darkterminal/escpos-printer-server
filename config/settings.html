@@ -1,454 +1,745 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-gray-900 text-gray-100">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ESC/POS Printer Settings</title>
     <script>const EPS_TOKEN = __EPS_TOKEN_JSON__;</script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#16a34a",
-                        accent: "#22c55e"
-                    }
-                }
-            }
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0c0d0f;
+            --bg-panel: #14161a;
+            --bg-panel-alt: #191c21;
+            --bg-input: #0f1115;
+            --line: #2a2f36;
+            --line-strong: #3b424c;
+            --text: #e6e8eb;
+            --muted: #8b949f;
+            --muted-2: #626c76;
+            --accent: #d97706;
+            --accent-soft: rgba(217, 119, 6, 0.14);
+            --ok: #3fb950;
+            --ok-soft: rgba(63, 185, 80, 0.13);
+            --danger: #f85149;
+            --danger-soft: rgba(248, 81, 73, 0.12);
+            --warn: #d29922;
+            --shadow: rgba(0, 0, 0, 0.35);
+            --radius: 2px;
+            --font-ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
         }
-    </script>
+
+        *, *::before, *::after { box-sizing: border-box; }
+        html { background: var(--bg); color: var(--text); }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--font-ui);
+            background:
+                linear-gradient(180deg, rgba(217, 119, 6, 0.04), transparent 180px),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 31px,
+                    rgba(255,255,255,0.018) 31px,
+                    rgba(255,255,255,0.018) 32px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 31px,
+                    rgba(255,255,255,0.018) 31px,
+                    rgba(255,255,255,0.018) 32px
+                ),
+                var(--bg);
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 24px auto 40px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: end;
+            padding: 20px 0 18px;
+            border-bottom: 1px solid var(--line-strong);
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 0 0 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(28px, 5vw, 48px);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            max-width: 62ch;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .status-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--line-strong);
+            background: var(--bg-panel);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .badge::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            background: currentColor;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.03);
+        }
+
+        .badge.ok { color: var(--ok); border-color: rgba(63,185,80,0.35); background: var(--ok-soft); }
+        .badge.err { color: var(--danger); border-color: rgba(248,81,73,0.35); background: var(--danger-soft); }
+        .badge.warn { color: var(--warn); border-color: rgba(210,153,34,0.35); background: rgba(210,153,34,0.12); }
+
+        .meta {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-2);
+            letter-spacing: 0.04em;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent 30%), var(--bg-panel);
+            border: 1px solid var(--line);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,0.01);
+        }
+
+        .panel-title {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+
+        .panel-index {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        .panel-body { padding: 16px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .field { display: flex; flex-direction: column; gap: 7px; }
+        .field.full { grid-column: 1 / -1; }
+
+        label, .label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            appearance: none;
+            border: 1px solid var(--line);
+            background: var(--bg-input);
+            color: var(--text);
+            padding: 11px 12px;
+            font: 500 14px/1.2 var(--font-ui);
+            outline: none;
+            transition: border-color 120ms ease, box-shadow 120ms ease;
+            border-radius: var(--radius);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+
+        input::placeholder { color: #5f6772; }
+
+        .check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            background: var(--bg-input);
+            min-height: 44px;
+        }
+
+        .check input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        .check span {
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .stack { display: flex; flex-direction: column; gap: 16px; }
+
+        .list { display: flex; flex-direction: column; gap: 8px; }
+        .list-row { display: flex; gap: 8px; align-items: stretch; }
+        .list-row input { flex: 1; }
+
+        .btn {
+            appearance: none;
+            border: 1px solid var(--line-strong);
+            background: var(--bg-panel-alt);
+            color: var(--text);
+            padding: 10px 14px;
+            font: 600 12px/1 var(--font-mono);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+            border-radius: var(--radius);
+        }
+
+        .btn:hover { background: #20252c; border-color: #4b5563; }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #111318;
+        }
+        .btn-primary:hover { background: #e08811; border-color: #e08811; }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+        }
+        .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: rgba(248,81,73,0.3);
+            background: rgba(248,81,73,0.04);
+            padding: 0 12px;
+            min-width: 44px;
+        }
+        .btn-danger:hover { background: var(--danger-soft); border-color: rgba(248,81,73,0.5); }
+
+        .btn-sm { padding: 8px 10px; font-size: 11px; }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+        }
+
+        .status {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            background: var(--bg-input);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--muted);
+            white-space: pre-wrap;
+        }
+        .status.show { display: block; }
+        .status.ok { color: var(--ok); border-color: rgba(63,185,80,0.3); background: var(--ok-soft); }
+        .status.err { color: var(--danger); border-color: rgba(248,81,73,0.3); background: var(--danger-soft); }
+        .status.warn { color: var(--warn); border-color: rgba(210,153,34,0.3); background: rgba(210,153,34,0.1); }
+
+        .foot {
+            margin-top: 16px;
+            padding: 14px 0 0;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted-2);
+        }
+
+        @media (max-width: 940px) {
+            .layout { grid-template-columns: 1fr; }
+            .topbar { grid-template-columns: 1fr; align-items: start; }
+            .status-cluster { align-items: flex-start; }
+        }
+
+        @media (max-width: 640px) {
+            .shell { width: min(100% - 20px, 1180px); margin-top: 16px; }
+            .grid { grid-template-columns: 1fr; }
+            .panel-body, .panel-header { padding-left: 14px; padding-right: 14px; }
+            .actions { flex-direction: column; }
+            .actions .btn { width: 100%; }
+            .foot { flex-direction: column; }
+        }
+    </style>
 </head>
+<body>
+    <div class="shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">ESC/POS // Control Interface</p>
+                <h1>Printer<br>Configuration</h1>
+                <p class="subtitle">Operational settings for receipt output, device transport, and template localization. Changes are persisted to the local config endpoint.</p>
+            </div>
+            <div class="status-cluster">
+                <div id="indicatorBadge" class="badge warn">WebSocket: Connecting</div>
+                <div class="meta">HTTP :1100 / WS :1945</div>
+            </div>
+        </header>
 
-<body class="min-h-screen flex flex-col items-center p-8">
-    <div class="w-full max-w-3xl bg-gray-800 rounded-2xl shadow-xl p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold flex items-center gap-2">
-                ESC/POS Printer Configuration
-            </h1>
-            <div class="flex items-center gap-2">
-                <div id="indicatorBadge" class="bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm">Status:
-                    <span id="printerIndicatorStatus">Online</span>
+        <div class="layout">
+            <section class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Device Parameters</h2>
+                    <span class="panel-index">01</span>
                 </div>
-                <button id="reloadBtn" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">🔄</button>
+                <div class="panel-body">
+                    <div class="grid">
+                        <div class="field full">
+                            <label for="printerName">Config Name</label>
+                            <input id="printerName" type="text" placeholder="IW-8001" />
+                        </div>
+
+                        <div class="field">
+                            <label for="printer_name">Printer Name</label>
+                            <input id="printer_name" type="text" placeholder="IW-8001" />
+                        </div>
+
+                        <div class="field">
+                            <label for="interface">Interface</label>
+                            <select id="interface">
+                                <option value="ethernet">Ethernet</option>
+                                <option value="linux-usb">Linux USB</option>
+                                <option value="smb">SMB</option>
+                                <option value="windows-usb">Windows USB</option>
+                                <option value="windows-lpt">Windows LPT</option>
+                                <option value="cups">CUPS</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="printer_host">Printer Host</label>
+                            <input id="printer_host" type="text" placeholder="192.168.1.140" />
+                        </div>
+
+                        <div class="field">
+                            <label for="printer_port">Printer Port</label>
+                            <input id="printer_port" type="number" placeholder="9100" />
+                        </div>
+
+                        <div class="field">
+                            <label for="template">Template</label>
+                            <select id="template">
+                                <option value="epson">Epson</option>
+                                <option value="star">Star</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="line_feed_each_in_items">Line Feed / Item</label>
+                            <input id="line_feed_each_in_items" type="number" value="1" />
+                        </div>
+
+                        <div class="field">
+                            <label for="more_new_line">Extra New Lines</label>
+                            <input id="more_new_line" type="number" value="0" />
+                        </div>
+
+                        <div class="field full">
+                            <span class="label">Drawer Signal</span>
+                            <label class="check" for="pull_cash_drawer">
+                                <input type="checkbox" id="pull_cash_drawer" />
+                                <span>Pull cash drawer on receipt</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button onclick="saveConfig()" class="btn btn-primary">Save Configuration</button>
+                        <button onclick="checkPrinter()" class="btn">Check Connection</button>
+                        <button onclick="testPrinter()" id="testBtn" class="btn btn-ghost">Send Test Print</button>
+                    </div>
+
+                    <div id="statusBox" class="status">
+                        <span id="statusText"></span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="stack">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Receipt Header</h2>
+                        <span class="panel-index">02</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="headerList" class="list"></div>
+                        <div class="actions" style="margin-top:14px;padding-top:14px;">
+                            <button onclick="addHeader()" class="btn btn-sm">+ Add Line</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Receipt Footer</h2>
+                        <span class="panel-index">03</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="footerList" class="list"></div>
+                        <div class="actions" style="margin-top:14px;padding-top:14px;">
+                            <button onclick="addFooter()" class="btn btn-sm">+ Add Line</button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 
-        <!-- FROM Source -->
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-1">Request Source (<code>from</code>)</label>
-            <select id="from" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2">
-                <option value="posclient">posclient</option>
-                <option value="testprinter">testprinter</option>
-                <option value="checkprinter">checkprinter</option>
-                <option value="pullcashdrawer">pullcashdrawer</option>
-            </select>
-        </div>
-
-        <!-- Printer Name -->
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-1">Printer Name</label>
-            <input id="printer_name" type="text" placeholder="IW-800"
-                class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2" />
-        </div>
-
-        <!-- Interface & Host Info -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-semibold mb-1">Interface</label>
-                <select id="interface" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2">
-                    <option value="ethernet">ethernet</option>
-                    <option value="linux-usb">linux-usb</option>
-                    <option value="windows-usb">windows-usb</option>
-                    <option value="windows-lpt">windows-lpt</option>
-                    <option value="cups">cups</option>
-                    <option value="smb">smb</option>
-                </select>
+        <section class="panel" style="margin-top:16px;">
+            <div class="panel-header">
+                <h2 class="panel-title">Language Map</h2>
+                <span class="panel-index">04</span>
             </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">Template</label>
-                <select id="template" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2">
-                    <option value="epson">epson</option>
-                    <option value="custom">custom</option>
-                </select>
+            <div class="panel-body">
+                <div id="langList" class="grid"></div>
+                <div class="actions">
+                    <button onclick="addLang()" class="btn btn-sm">+ Add Field</button>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Host and Port -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-semibold mb-1">Printer Host</label>
-                <input id="printer_host" type="text" placeholder="192.168.1.150"
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2" />
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">Printer Port</label>
-                <input id="printer_port" type="number" placeholder="9100"
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2" />
-            </div>
-        </div>
-
-        <!-- Toggles -->
-        <div class="flex flex-wrap items-center gap-4 mb-6">
-            <label class="flex items-center gap-2">
-                <input id="pull_cash_drawer" type="checkbox" class="accent-accent">
-                <span>Pull Cash Drawer</span>
-            </label>
-            <label class="flex items-center gap-2">
-                <span>Line Feed Each Item:</span>
-                <input id="line_feed_each_in_items" type="number" min="0" value="1"
-                    class="w-16 bg-gray-700 border border-gray-600 rounded-lg p-1 text-center" />
-            </label>
-            <label class="flex items-center gap-2">
-                <span>Extra New Line:</span>
-                <input id="more_new_line" type="number" min="0" value="0"
-                    class="w-16 bg-gray-700 border border-gray-600 rounded-lg p-1 text-center" />
-            </label>
-        </div>
-
-        <!-- Header/Footer -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-semibold mb-1">Custom Header Lines</label>
-                <textarea id="custom_print_header" placeholder="One per line..."
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 h-28"></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-semibold mb-1">Custom Footer Lines</label>
-                <textarea id="custom_print_footer" placeholder="One per line..."
-                    class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 h-28"></textarea>
-            </div>
-        </div>
-
-        <!-- Custom Language (Accordion) -->
-        <div class="border-t border-gray-700 mt-6 pt-4">
-            <button id="langToggle"
-                class="w-full flex justify-between items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">
-                <span class="font-semibold text-lg">Receipt Language Settings</span>
-                <span id="langArrow" class="transition-transform">▼</span>
-            </button>
-            <div id="langSection" class="hidden mt-4 grid grid-cols-2 gap-4">
-                <div><label>Operator</label><input id="lang_operator" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Kasir" /></div>
-                <div><label>Time</label><input id="lang_time" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Waktu" /></div>
-                <div><label>Transaction Number</label><input id="lang_transaction_number"
-                        class="w-full bg-gray-700 rounded-lg p-2" placeholder="Nomor Transaksi" /></div>
-                <div><label>Customer Name</label><input id="lang_customer_name"
-                        class="w-full bg-gray-700 rounded-lg p-2" placeholder="Nama Pelanggan" /></div>
-                <div><label>Tax</label><input id="lang_tax" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Pajak" /></div>
-                <div><label>Member Discount</label><input id="lang_member" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Diskon Member" /></div>
-                <div><label>Total</label><input id="lang_total" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Total Belanja" /></div>
-                <div><label>Paid</label><input id="lang_paid" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Tunai" /></div>
-                <div><label>Return</label><input id="lang_return" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Kembalian" /></div>
-                <div><label>Due Date</label><input id="lang_due_date" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Jatuh Tempo" /></div>
-                <div><label>Saving</label><input id="lang_saving" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Tabungan" /></div>
-                <div><label>Loan</label><input id="lang_loan" class="w-full bg-gray-700 rounded-lg p-2"
-                        placeholder="Piutang" /></div>
-            </div>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-end mt-6 gap-4">
-            <button id="testBtn" class="bg-red-500 hover:bg-red-700 px-6 py-2 rounded-lg font-semibold">Test
-                Printer</button>
-            <button id="checkBtn" class="bg-blue-500 hover:bg-blue-700 px-6 py-2 rounded-lg font-semibold">Check
-                Connection</button>
-            <button id="saveBtn" class="bg-primary hover:bg-accent px-6 py-2 rounded-lg font-semibold">Save</button>
-            <button id="showJsonBtn" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-lg font-semibold">View
-                JSON</button>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div id="modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
-        <div class="bg-gray-800 w-11/12 max-w-2xl rounded-xl p-6">
-            <h2 class="text-xl font-bold mb-3">Current JSON Configuration</h2>
-            <textarea id="jsonOutput" readonly
-                class="w-full h-96 bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs"></textarea>
-            <div class="text-right mt-3">
-                <button id="closeModal" class="bg-primary hover:bg-accent px-4 py-1.5 rounded-lg">Close</button>
-            </div>
-        </div>
+        <footer class="foot">
+            <span>ESC/POS PRINTER SERVER</span>
+            <span>LOCAL CONFIG ENDPOINT /api/config</span>
+        </footer>
     </div>
 
     <script>
-        class ReconnectingWebSocket {
-            constructor(url, options = {}) {
-                this.url = url;
-                this.autoReconnectInterval = options.autoReconnectInterval || 3000; // 3 seconds
-                this.maxRetries = options.maxRetries || Infinity;
-                this.retryCount = 0;
-                this.ws = null;
-                this.listeners = {};
-
-                this.open();
-            }
-
-            open() {
-                console.log(`🔌 Connecting to ${this.url} ...`);
-                this.ws = new WebSocket(this.url);
-
-                this.ws.onopen = (event) => {
-                    console.log('✅ Connected to WebSocket server');
-                    this.retryCount = 0;
-                    this._emit('open', event);
-                };
-
-                this.ws.onmessage = (msg) => {
-                    this._emit('message', msg);
-                };
-
-                this.ws.onerror = (err) => {
-                    console.warn('⚠️ WebSocket error:', err);
-                    this._emit('error', err);
-                };
-
-                this.ws.onclose = (e) => {
-                    console.warn(`❌ Connection closed (${e.code})`);
-                    this._emit('close', e);
-                    this.reconnect();
-                };
-            }
-
-            reconnect() {
-                if (this.retryCount >= this.maxRetries) {
-                    console.error('❌ Max reconnect attempts reached. Giving up.');
-                    return;
-                }
-
-                this.retryCount++;
-                console.log(`⏳ Attempting reconnect #${this.retryCount} in ${this.autoReconnectInterval / 1000}s...`);
-                setTimeout(() => {
-                    this.open();
-                }, this.autoReconnectInterval);
-            }
-
-            send(data) {
-                if (this.ws.readyState === WebSocket.OPEN) {
-                    this.ws.send(typeof data === 'string' ? data : JSON.stringify(data));
-                } else {
-                    console.warn('⚠️ WebSocket not open. Message queued or dropped.');
-                }
-            }
-
-            on(event, callback) {
-                this.listeners[event] = this.listeners[event] || [];
-                this.listeners[event].push(callback);
-            }
-
-            _emit(event, data) {
-                (this.listeners[event] || []).forEach(cb => cb(data));
-            }
-
-            close() {
-                if (this.ws) this.ws.close();
-            }
-        }
-
         const apiBase = "/api/config";
-        let wsServer = "ws://localhost:1945";
+        const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
+        const wsPort = 1945;
+        const wsUrl = `${wsProtocol}://${location.hostname}:${wsPort}`;
 
-        async function fetchConfig() {
-            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
-            const data = await res.json();
+        const indicator = document.getElementById("indicatorBadge");
+        const statusBox = document.getElementById("statusBox");
+        const statusText = document.getElementById("statusText");
+        const testBtn = document.getElementById("testBtn");
 
-            const ps = data.printer_settings || {};
-            wsServer = `ws://${ps.printer_host}:${ps.printer_port}`;
+        let ws = null;
+        let wsConnected = false;
+
+        function setIndicator(state, text) {
+            indicator.className = "badge " + (state || "warn");
+            indicator.textContent = text;
         }
-        fetchConfig();
 
-        const el = id => document.getElementById(id);
+        function showStatus(type, msg) {
+            statusBox.className = "status show " + (type || "");
+            statusText.textContent = msg;
+        }
 
-        const indicator = el('printerIndicatorStatus');
-        const indicatorBadge = el('indicatorBadge');
-
-        const ws = new ReconnectingWebSocket(wsServer, {
-            autoReconnectInterval: 3000,
-            maxRetries: Infinity
-        });
-
-        ws.on("open", () => {
-            console.log("🟢 Client Connected");
-            indicatorBadge.className = "bg-green-700 hover:bg-green-600 px-4 py-2 rounded-lg text-sm";
-            indicator.innerText = "Online";
-        });
-
-        ws.on("close", () => {
-            console.log("🔴 Disconnected from server");
-            indicatorBadge.className = "bg-red-700 hover:bg-red-600 px-4 py-2 rounded-lg text-sm";
-            indicator.innerText = "Offline";
-        });
-
-        ws.on("error", (err) => {
-            console.error("⚠️ WebSocket error:", err);
-        });
-
-        let awaitingPrinterCheck = false;
-
-        ws.on("message", (msg) => {
-            if (!awaitingPrinterCheck) {
-                return;
-            }
-            awaitingPrinterCheck = false;
-
-            const reply = String(msg.data ?? msg);
-            if (reply.includes("Printer connection OK")) {
-                indicator.innerText = "Connection OK";
-                alert("✅ " + reply);
-            } else {
-                indicator.innerText = "Check failed";
-                alert("⚠️ " + reply);
-            }
-        });
-
-        // Load config
         async function loadConfig() {
-            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
-            const data = await res.json();
-            const ps = data.printer_settings || {};
-            const lang = ps.custom_language || {};
+            try {
+                const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
+                const data = await res.json();
+                document.getElementById("printerName").value = data.printer_name || "";
+                document.getElementById("printer_name").value = data.printer_settings?.printer_name || "";
+                document.getElementById("interface").value = data.printer_settings?.interface || "ethernet";
+                document.getElementById("printer_host").value = data.printer_settings?.printer_host || "";
+                document.getElementById("printer_port").value = data.printer_settings?.printer_port || "";
+                document.getElementById("template").value = data.printer_settings?.template || "epson";
+                document.getElementById("line_feed_each_in_items").value = data.printer_settings?.line_feed_each_in_items ?? 1;
+                document.getElementById("more_new_line").value = data.printer_settings?.more_new_line ?? 0;
+                document.getElementById("pull_cash_drawer").checked = data.printer_settings?.pull_cash_drawer ?? true;
+                renderList("headerList", data.printer_settings?.custom_print_header || []);
+                renderList("footerList", data.printer_settings?.custom_print_footer || []);
+                renderLang(data.printer_settings?.custom_language || {});
+                showStatus("ok", "Configuration loaded.");
+            } catch (e) {
+                showStatus("err", "Failed to load config: " + e.message);
+            }
+        }
 
-            el("from").value = data.from || "testprinter";
-            el("printer_name").value = data.printer_name || "";
-            el("interface").value = ps.interface || "ethernet";
-            el("printer_host").value = ps.printer_host || "";
-            el("printer_port").value = ps.printer_port || 9100;
-            el("template").value = ps.template || "epson";
-            el("pull_cash_drawer").checked = ps.pull_cash_drawer || false;
-            el("line_feed_each_in_items").value = ps.line_feed_each_in_items ?? 1;
-            el("more_new_line").value = ps.more_new_line ?? 0;
-            el("custom_print_header").value = (ps.custom_print_header || []).join("\n");
-            el("custom_print_footer").value = (ps.custom_print_footer || []).join("\n");
-
-            // Languages
-            Object.entries(lang).forEach(([key, val]) => {
-                const id = "lang_" + key;
-                if (el(id)) el(id).value = val;
+        function renderList(id, items) {
+            const container = document.getElementById(id);
+            container.innerHTML = "";
+            items.forEach(val => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                row.innerHTML = `
+                    <input type="text" value="${val.replace(/"/g, "&quot;")}" />
+                    <button onclick="this.parentElement.remove()" class="btn btn-danger" aria-label="Remove">X</button>
+                `;
+                container.appendChild(row);
             });
         }
 
-        function buildConfig() {
-            const langKeys = [
-                "operator", "time", "transaction_number", "customer_name", "tax", "member",
-                "total", "paid", "return", "due_date", "saving", "loan"
-            ];
-            const custom_language = {};
-            langKeys.forEach(k => custom_language[k] = el("lang_" + k).value);
+        function addHeader() { renderList("headerList", [...getList("headerList"), ""]); }
+        function addFooter() { renderList("footerList", [...getList("footerList"), ""]); }
 
-            return {
-                auth_token: EPS_TOKEN,
-                from: el("from").value,
-                printer_name: el("printer_name").value,
-                printer_settings: {
-                    printer_name: el("printer_name").value,
-                    interface: el("interface").value,
-                    printer_host: el("printer_host").value,
-                    printer_port: parseInt(el("printer_port").value || 9100),
-                    template: el("template").value,
-                    pull_cash_drawer: el("pull_cash_drawer").checked,
-                    line_feed_each_in_items: parseInt(el("line_feed_each_in_items").value || 1),
-                    more_new_line: parseInt(el("more_new_line").value || 0),
-                    custom_print_header: el("custom_print_header").value.split("\n").filter(Boolean),
-                    custom_print_footer: el("custom_print_footer").value.split("\n").filter(Boolean),
-                    custom_language
-                }
-            };
+        function getList(id) {
+            return [...document.querySelectorAll(`#${id} input`)].map(i => i.value).filter(v => v.trim() !== "");
         }
 
-        async function testPrinter() {
-            const date_transaction = (new Date()).toISOString().slice(0, 10);
-
-            const config = buildConfig();
-            const receiptData = Object.assign(config, {
-                "receipt_data": {
-                    "app_name": "XYZ MART",
-                    "full_name": "Wagiman Artomoro",
-                    "transaction": {
-                        "date_transaction": date_transaction,
-                        "transaction": "TRX20251028001",
-                        "customer_name": "Wulan Wedari",
-                        "tax": 3000,
-                        "member_discount": 2000,
-                        "total_transaction": 90000,
-                        "paid": 100000,
-                        "paid_return": 10000,
-                        "payment": "Cash",
-                        "deposit": 0,
-                        "due_date": null
-                    },
-                    "cart": [
-                        {
-                            "item_name": "Kopi Robusta 250gr",
-                            "price": 45000,
-                            "qty": 2,
-                            "sub_total": 90000
-                        },
-                        {
-                            "item_name": "Gula Aren Premium 500gr",
-                            "price": 38000,
-                            "qty": 1,
-                            "sub_total": 38000
-                        }
-                    ],
-                    "promo": [
-                        "Beli 2 gratis 1 untuk produk tertentu",
-                        "Diskon member 10% untuk semua kopi lokal"
-                    ]
-                }
+        function renderLang(obj) {
+            const container = document.getElementById("langList");
+            container.innerHTML = "";
+            Object.entries(obj).forEach(([key, val]) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                row.innerHTML = `
+                    <input type="text" value="${key}" placeholder="Key" />
+                    <input type="text" value="${val}" placeholder="Value" />
+                    <button onclick="this.parentElement.remove()" class="btn btn-danger" aria-label="Remove">X</button>
+                `;
+                container.appendChild(row);
             });
-            // Send websocket data to test printer
-            ws.send(JSON.stringify(receiptData));
         }
 
-        async function checkPrinter() {
-            const config = buildConfig();
-            config.from = "checkprinter";
-            awaitingPrinterCheck = true;
-            ws.send(JSON.stringify(config));
+        function addLang() { renderLang({ ...getLang(), new_key: "" }); }
+
+        function getLang() {
+            const obj = {};
+            document.querySelectorAll("#langList .list-row").forEach(row => {
+                const [k, v] = row.querySelectorAll("input");
+                if (k.value.trim()) obj[k.value.trim()] = v.value;
+            });
+            return obj;
         }
 
         async function saveConfig() {
-            const config = buildConfig();
-            delete config.auth_token;
-            await fetch(apiBase, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", 'X-EPS-Token': EPS_TOKEN },
-                body: JSON.stringify(config, null, 2)
-            });
-            alert("✅ Configuration saved successfully!");
+            const body = {
+                from: "testprinter",
+                printer_name: document.getElementById("printerName").value,
+                printer_settings: {
+                    printer_name: document.getElementById("printer_name").value,
+                    interface: document.getElementById("interface").value,
+                    printer_host: document.getElementById("printer_host").value,
+                    printer_port: parseInt(document.getElementById("printer_port").value) || 0,
+                    template: document.getElementById("template").value,
+                    pull_cash_drawer: document.getElementById("pull_cash_drawer").checked,
+                    line_feed_each_in_items: parseInt(document.getElementById("line_feed_each_in_items").value) || 0,
+                    more_new_line: parseInt(document.getElementById("more_new_line").value) || 0,
+                    custom_print_header: getList("headerList"),
+                    custom_print_footer: getList("footerList"),
+                    custom_language: getLang()
+                }
+            };
+            try {
+                const res = await fetch(apiBase, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", 'X-EPS-Token': EPS_TOKEN },
+                    body: JSON.stringify(body, null, 2)
+                });
+                const json = await res.json();
+                if (json.status === "saved") showStatus("ok", "Configuration saved successfully.");
+                else showStatus("err", "Save failed.");
+            } catch (e) {
+                showStatus("err", "Error saving: " + e.message);
+            }
         }
 
-        // Accordion toggle
-        el("langToggle").onclick = () => {
-            const section = el("langSection");
-            const arrow = el("langArrow");
-            section.classList.toggle("hidden");
-            arrow.style.transform = section.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
-        };
+        async function testPrinter() {
+            const payload = {
+                from: "testprinter",
+                printer_name: document.getElementById("printerName").value,
+                printer_settings: {
+                    printer_name: document.getElementById("printer_name").value,
+                    interface: document.getElementById("interface").value,
+                    printer_host: document.getElementById("printer_host").value,
+                    printer_port: parseInt(document.getElementById("printer_port").value) || 0,
+                    template: document.getElementById("template").value,
+                    pull_cash_drawer: document.getElementById("pull_cash_drawer").checked,
+                    line_feed_each_in_items: parseInt(document.getElementById("line_feed_each_in_items").value) || 0,
+                    more_new_line: parseInt(document.getElementById("more_new_line").value) || 0,
+                    custom_print_header: getList("headerList"),
+                    custom_print_footer: getList("footerList"),
+                    custom_language: getLang()
+                },
+                auth_token: EPS_TOKEN,
+            };
 
-        // Modal
-        el("showJsonBtn").onclick = () => {
-            const config = buildConfig();
-            el("jsonOutput").value = JSON.stringify(config, null, 2);
-            el("modal").classList.remove("hidden");
-        };
-        el("closeModal").onclick = () => el("modal").classList.add("hidden");
+            if (!wsConnected) return reconnectWebSocket(payload);
 
-        el("saveBtn").onclick = saveConfig;
-        el("reloadBtn").onclick = loadConfig;
-        el("testBtn").onclick = testPrinter;
-        el("checkBtn").onclick = checkPrinter;
+            showStatus("warn", "Sending test print...");
+            testBtn.disabled = true;
 
+            try {
+                ws.send(JSON.stringify(payload));
+                const result = await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error("No response from printer (timeout)")), 5000);
+                    ws.onmessage = (e) => {
+                        clearTimeout(timeout);
+                        resolve(e.data);
+                    };
+                    ws.onerror = (e) => {
+                        clearTimeout(timeout);
+                        reject(e);
+                    };
+                });
+                showStatus("ok", "Printer response: " + result);
+            } catch (err) {
+                showStatus("err", "Failed: " + err.message);
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        async function checkPrinter() {
+            const payload = {
+                from: "checkprinter",
+                printer_name: document.getElementById("printerName").value,
+                printer_settings: {
+                    printer_name: document.getElementById("printer_name").value,
+                    interface: document.getElementById("interface").value,
+                    printer_host: document.getElementById("printer_host").value,
+                    printer_port: parseInt(document.getElementById("printer_port").value) || 0,
+                    template: document.getElementById("template").value,
+                },
+                auth_token: EPS_TOKEN,
+            };
+
+            const btn = document.querySelector('button[onclick="checkPrinter()"]');
+            btn.disabled = true;
+            showStatus("warn", "Checking printer connection...");
+
+            try {
+                if (!wsConnected) await new Promise((resolve, reject) => {
+                    connectWebSocket();
+                    const check = setInterval(() => { if (wsConnected) { clearInterval(check); resolve(); } }, 100);
+                    setTimeout(() => { clearInterval(check); reject(new Error("WS not connected")); }, 3000);
+                });
+
+                ws.send(JSON.stringify(payload));
+                const result = await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error("Timeout")), 8000);
+                    ws.onmessage = (e) => { clearTimeout(timeout); resolve(e.data); };
+                });
+
+                if (result.includes('[SUCCESS]')) {
+                    showStatus("ok", result);
+                } else {
+                    showStatus("err", result);
+                }
+            } catch (e) {
+                showStatus("err", "Check Error: " + e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+            ws = new WebSocket(wsUrl);
+            setIndicator("warn", "WebSocket: Connecting");
+
+            ws.onopen = () => {
+                wsConnected = true;
+                setIndicator("ok", "WebSocket: Connected");
+            };
+
+            ws.onclose = () => {
+                wsConnected = false;
+                setIndicator("err", "WebSocket: Disconnected");
+            };
+
+            ws.onerror = () => {
+                wsConnected = false;
+                setIndicator("err", "WebSocket: Error");
+            };
+        }
+
+        function reconnectWebSocket(payload) {
+            showStatus("warn", "Reconnecting WebSocket...");
+            connectWebSocket();
+
+            const wait = setInterval(() => {
+                if (wsConnected) {
+                    clearInterval(wait);
+                    showStatus("warn", "Reconnected. Sending test print...");
+                    testPrinter();
+                }
+            }, 500);
+
+            setTimeout(() => {
+                if (!wsConnected) {
+                    clearInterval(wait);
+                    showStatus("err", "Failed to reconnect WebSocket.");
+                }
+            }, 5000);
+        }
+
+        connectWebSocket();
         loadConfig();
     </script>
 </body>
-
 </html>
