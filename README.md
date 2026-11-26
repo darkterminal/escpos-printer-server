@@ -83,7 +83,7 @@ composer install
 ```bash
 composer run create:phar
 ```
-> Note: Phar is generated inside `bin` directory
+> Note: Phar is generated inside `bin` directory. The `config/` directory is bundled into the PHAR, so the Web GUI assets ship with the artifact.
 
 ## Usage
 
@@ -95,6 +95,7 @@ ESC/POS Printer Server is already installed on Windows Service Manager.
 
 1. Open your terminal inside extracted content
 2. the run this command `php eps.phar start` or `php eps.phar start -d` to run as a daemon.
+3. On first start, `printer-settings.json` is created next to `eps.phar`; the Web GUI is served from the bundled `config/settings.html` asset.
 
 ## Web GUI & Integration
 

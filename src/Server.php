@@ -18,25 +18,31 @@ class Server implements PrinterServer
     protected string $configDir;
     protected string $configFile;
     protected string $settingsPage;
+    protected string $assetDir;
 
     public function __construct(
         public ?string $host = '0.0.0.0',
-        public ?int $port = 1945
+        public ?int $port = 1945,
+        ?string $configDir = null
     )
     {
         $this->host = $host;
         $this->port = $port;
 
-        // Shared config file path
-        $this->configDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config';
+        $phar = \Phar::running(false);
+        $base = $phar !== '' ? dirname($phar) : dirname(__DIR__);
+        $this->configDir = $configDir ?? $base . DIRECTORY_SEPARATOR . 'config';
+        $this->assetDir = $phar !== '' ? dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config' : $this->configDir;
         $this->configFile = $this->configDir . DIRECTORY_SEPARATOR . 'printer-settings.json';
-        $this->settingsPage = $this->configDir . DIRECTORY_SEPARATOR . 'settings.html';
+        $this->settingsPage = $this->assetDir . DIRECTORY_SEPARATOR . 'settings.html';
+
+        $this->createConfigurationSettings();
     }
 
     private function createConfigurationSettings(): void
     {
         if (!is_dir($this->configDir)) {
-            mkdir($this->configDir, 0777, true);
+            mkdir($this->configDir, 0755, true);
         }
 
         if (!file_exists($this->configFile)) {
@@ -78,12 +84,9 @@ class Server implements PrinterServer
                 ],
             ];
 
-            file_put_contents($this->configFile, json_encode($defaultPrinterSetting, JSON_PRETTY_PRINT));
-        }
-
-        if (!file_exists($this->settingsPage)) {
-            $settingPageRawFile = "https://github.com/darkterminal/escpos-printer-server/raw/refs/heads/main/config/settings.html";
-            file_put_contents($this->settingsPage, file_get_contents($settingPageRawFile));
+            $tempFile = $this->configFile . '.tmp.' . bin2hex(random_bytes(4));
+            file_put_contents($tempFile, json_encode($defaultPrinterSetting, JSON_PRETTY_PRINT), LOCK_EX);
+            rename($tempFile, $this->configFile);
         }
     }
 
@@ -174,8 +177,12 @@ class Server implements PrinterServer
 
         $http->onMessage = function ($connection, Request $req) use ($configFile, $settingsPage) {
             $path = $req->path();
-            if ($path === '/' || $path === '/settings') {
-                $html = file_exists($settingsPage) ? file_get_contents($settingsPage) : '<h1>Settings page missing</h1>';
+            if ($path === '/' || $path === '/settings' || $path === '/index.html') {
+                if (!file_exists($settingsPage)) {
+                    $connection->send(new Response(503, ['Content-Type' => 'text/plain'], 'Web GUI asset missing: config/settings.html was not bundled.'));
+                    return;
+                }
+                $html = file_get_contents($settingsPage);
                 $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
                 return;
             }
@@ -238,12 +245,12 @@ class Server implements PrinterServer
 
             // Serve the HTML UI at root
             if ($path === '/' || $path === '/settings' || $path === '/index.html') {
-                if (file_exists($settingsPage)) {
-                    $html = file_get_contents($settingsPage);
-                    $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
-                } else {
-                    $connection->send(new Response(404, ['Content-Type' => 'text/plain'], 'settings.html not found.'));
+                if (!file_exists($settingsPage)) {
+                    $connection->send(new Response(503, ['Content-Type' => 'text/plain'], 'Web GUI asset missing: config/settings.html was not bundled.'));
+                    return;
                 }
+                $html = file_get_contents($settingsPage);
+                $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
                 return;
             }
 
