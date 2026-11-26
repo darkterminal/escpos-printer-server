@@ -1,0 +1,15 @@
+- title: Overview
+  url: /user-manual/
+  section: Introduction
+- title: Getting started
+  url: /user-manual/installation/
+  section: Guide
+- title: Authentication
+  url: /user-manual/authentication/
+  section: Security
+- title: WebSocket protocol
+  url: /user-manual/websocket-protocol/
+  section: Guide
+- title: Validation
+  url: /user-manual/validation/
+  section: Reference
