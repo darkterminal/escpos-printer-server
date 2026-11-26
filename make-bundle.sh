@@ -13,21 +13,35 @@ unzip -q /tmp/nssm.zip -d /tmp/nssm_unpack
 find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
 ls -la "$RELEASE_DIR" || true
 
-LISTING="$(curl -s https://windows.php.net/downloads/releases/)"
-# Keep the fallback reachable when the listing has no match (egrep returns 1
-# and pipefail would otherwise abort the script).
-PHP_ZIP=$(echo "$LISTING" \
-| egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' \
-| sort -V | tail -n1) || true
+if ! command -v jq >/dev/null 2>&1; then
+    echo "ERROR: jq is required to resolve PHP release metadata from releases.json"
+    exit 1
+fi
 
-if [ -z "$PHP_ZIP" ]; then
-    echo "Fallback: Using php-8.4.13-Win32-vs17-x64.zip"
-    PHP_ZIP="php-8.4.13-Win32-vs17-x64.zip"
+PHP_META="$(curl -fsSL --retry 3 --max-time 30 https://windows.php.net/downloads/releases/releases.json)" || {
+    echo "ERROR: failed to fetch PHP release metadata from releases.json"
+    exit 1
+}
+
+PHP_ZIP="$(printf '%s' "$PHP_META" | jq -er '.["8.4"]["ts-vs17-x64"].zip.path')" || {
+    echo "ERROR: failed to extract PHP 8.4 ts-vs17-x64 zip path from releases.json"
+    exit 1
+}
+
+PHP_SHA256="$(printf '%s' "$PHP_META" | jq -er '.["8.4"]["ts-vs17-x64"].zip.sha256')" || {
+    echo "ERROR: failed to extract PHP 8.4 ts-vs17-x64 zip sha256 from releases.json"
+    exit 1
+}
+
+if ! [[ "$PHP_SHA256" =~ ^[0-9a-fA-F]{64}$ ]]; then
+    echo "ERROR: invalid PHP zip sha256 from releases.json: $PHP_SHA256"
+    exit 1
 fi
 
 echo "Downloading $PHP_ZIP..."
 
-curl -L -o /tmp/php8.4.zip "https://windows.php.net/downloads/releases/$PHP_ZIP"
+curl -fsSL --retry 3 -o /tmp/php8.4.zip "https://windows.php.net/downloads/releases/$PHP_ZIP"
+echo "$PHP_SHA256  /tmp/php8.4.zip" | sha256sum -c -
 unzip -q /tmp/php8.4.zip -d /tmp/php_unpack
 mkdir -p "$RELEASE_DIR/php"
 cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/" || true

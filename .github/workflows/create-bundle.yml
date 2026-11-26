@@ -60,21 +60,32 @@ jobs:
           unzip -q /tmp/nssm.zip -d /tmp/nssm_unpack
           find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
 
-      # --- Find latest PHP 8.4 Windows build ---
-      - name: Find latest PHP 8.4 Windows build
+      # --- Resolve PHP 8.4 Windows build from release metadata ---
+      - name: Resolve PHP 8.4 Windows build
         id: php
         run: |
-          LISTING="$(curl -s https://windows.php.net/downloads/releases/)"
-          PHP_ZIP=$(echo "$LISTING" | egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' | sort -V | tail -n1)
-          if [ -z "$PHP_ZIP" ]; then
-              PHP_ZIP="php-8.4.13-Win32-vs17-x64.zip"
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "ERROR: jq is required to resolve PHP release metadata" >&2
+            exit 1
           fi
-          echo "php_zip=$PHP_ZIP" >> $GITHUB_OUTPUT
+          PHP_META="$(curl -fsSL --retry 3 --max-time 30 https://windows.php.net/downloads/releases/releases.json)" \
+            || { echo "ERROR: failed to fetch PHP release metadata from releases.json" >&2; exit 1; }
+          PHP_ZIP="$(printf '%s' "$PHP_META" | jq -er '.["8.4"]["ts-vs17-x64"].zip.path')" \
+            || { echo "ERROR: failed to extract PHP 8.4 ts-vs17-x64 zip path from releases.json" >&2; exit 1; }
+          PHP_SHA256="$(printf '%s' "$PHP_META" | jq -er '.["8.4"]["ts-vs17-x64"].zip.sha256')" \
+            || { echo "ERROR: failed to extract PHP 8.4 ts-vs17-x64 zip sha256 from releases.json" >&2; exit 1; }
+          if ! [[ "$PHP_SHA256" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            echo "ERROR: invalid PHP zip sha256 from releases.json: $PHP_SHA256" >&2
+            exit 1
+          fi
+          echo "php_zip=$PHP_ZIP" >> "$GITHUB_OUTPUT"
+          echo "php_sha256=$PHP_SHA256" >> "$GITHUB_OUTPUT"
 
       # --- Download & unpack PHP for Windows ---
       - name: Download and unpack PHP (Windows build)
         run: |
-          curl -L -o /tmp/php.zip "https://windows.php.net/downloads/releases/${{ steps.php.outputs.php_zip }}"
+          curl -fsSL --retry 3 -o /tmp/php.zip "https://windows.php.net/downloads/releases/${{ steps.php.outputs.php_zip }}"
+          echo "${{ steps.php.outputs.php_sha256 }}  /tmp/php.zip" | sha256sum -c -
           unzip -q /tmp/php.zip -d /tmp/php_unpack
           mkdir -p "$RELEASE_DIR/php"
           cp -r /tmp/php_unpack/* "$RELEASE_DIR/php/"
