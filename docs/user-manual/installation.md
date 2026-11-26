@@ -24,6 +24,12 @@ cd ~/.local/share/escpos-printer-server
 1. Download the `eps-windows-bundle` archive from the [Release Page](https://github.com/darkterminal/escpos-printer-server/releases).
 2. Extract it somewhere on your system.
 3. Run `eps-install.bat` to install and start the `EPS-WS` and `EPS-HTTP` services via NSSM.
+4. Need to uninstall? Run `eps-uninstall.bat`.
+
+After installing via `eps-install.bat`, the Windows services run the server and expose the same surface as the Linux/macOS bundle:
+
+- Web GUI: `http://localhost:1100`
+- WebSocket: `ws://localhost:1945`
 
 ## Run
 

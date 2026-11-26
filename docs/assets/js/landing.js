@@ -1,8 +1,8 @@
-/* Turso Client PHP landing page — progressive enhancement only. */
+/* ESC/POS Printer Server landing page — progressive enhancement only. */
 (function () {
     "use strict";
 
-    var REPO = "tursodatabase/turso-client-php";
+    var REPO = "darkterminal/escpos-printer-server";
 
     /* ----------------------------------------------------------- theme */
     // Same storage key and attribute as the user manual, so a toggle here
