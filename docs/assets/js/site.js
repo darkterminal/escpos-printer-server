@@ -1,4 +1,4 @@
-/* Turso Client PHP docs — progressive enhancement only. */
+/* ESC/POS Printer Server docs — progressive enhancement only. */
 
 (function () {
     'use strict';
