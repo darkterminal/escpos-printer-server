@@ -132,13 +132,21 @@ This object contains the print source, printer configuration, and receipt data.
 }
 ```
 
+### Check Printer Connection
+
+Use `checkprinter` to open the configured printer connection and return a result without printing paper. The reply is a status message such as `[SUCCESS] Printer connection OK (ethernet)`; a connection failure returns an error message. `receipt_data` is not required. The `testprinter` source remains the no-printer receipt preview and does not contact the configured printer.
+
+```json
+{ "from": "checkprinter", "printer_name": "IW-8001", "printer_settings": { "interface": "ethernet", "printer_host": "192.168.1.150", "printer_port": 9100, "template": "epson" } }
+```
+
 ---
 
 **Top-Level Fields**
 
 | Key                | Type     | Required | Description                                                                                                                                                                                     |
 | ------------------ | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `from`             | `string` | **Yes**  | Identifier for the client or request source. Used to distinguish between standard printing, test prints, or cash drawer triggers. Examples: `"posclient"`, `"testprinter"`, `"pullcashdrawer"`. |
+| `from`             | `string` | **Yes**  | Identifier for the client or request source. Used to distinguish between standard printing, test prints, connectivity checks, or cash drawer triggers. Examples: `"posclient"`, `"testprinter"`, `"checkprinter"`, `"pullcashdrawer"`. |
 | `printer_name`     | `string` | **Yes**  | The system-recognized printer name. On Linux (CUPS) it matches the printer queue name; on Windows it matches the printer’s registered device name.                                              |
 | `printer_settings` | `object` | **Yes**  | Printer configuration and behavior options. Defines how the server connects to the printer, layout preferences, and text settings.                                                              |
 | `receipt_data`     | `object` | Conditional | Required for `"posclient"` and `"testprinter"`; optional for other sources. Contains all data that will be printed on the receipt, including header, items, totals, and optional promotional or footer sections. |

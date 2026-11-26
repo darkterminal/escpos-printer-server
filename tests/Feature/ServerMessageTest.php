@@ -66,6 +66,20 @@ test('valid posclient payload sends exactly one success response', function () {
     unlink($payload['printer_settings']['printer_name']);
 });
 
+test('checkprinter payload without receipt_data sends one Printer connection OK response', function () {
+    $payload = serverPayload(['from' => 'checkprinter']);
+    unset($payload['receipt_data']);
+    $connection = $this->createMock(TcpConnection::class);
+    $connection->method('getRemoteIp')->willReturn('127.0.0.1');
+    $connection->expects($this->once())
+        ->method('send')
+        ->with($this->callback(fn ($message) => is_string($message) && str_contains($message, 'Printer connection OK')));
+
+    expect(dispatchMessage($connection, json_encode($payload, JSON_THROW_ON_ERROR)))->toBeNull();
+
+    unlink($payload['printer_settings']['printer_name']);
+});
+
 test('payload missing receipt_data sends exactly one invalid payload response', function () {
     $payload = serverPayload();
     unset($payload['receipt_data']);

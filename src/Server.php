@@ -127,6 +127,10 @@ class Server implements PrinterServer
                     $receiptPrinter->testPrinter();
                     $responseMesage = $this->createMessage('success', 'Printer tested successfully');
                     break;
+                case 'checkprinter':
+                    $result = $receiptPrinter->checkPrinter();
+                    $responseMesage = $this->createMessage('success', "Printer connection OK ({$result['interface']})");
+                    break;
                 case 'pullcashdrawer':
                     $receiptPrinter->pullCashDrawer();
                     $responseMesage = $this->createMessage('success', 'Cash drawer pulled successfully');
