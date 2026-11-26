@@ -7,7 +7,7 @@ namespace Tests\Feature;
 use Darkterminal\EscposPrinterServer\ReceiptPrinter;
 
 test('testPrinter prints a dummy receipt containing the store name', function () {
-    $printer = new ReceiptPrinter();
+    $printer = new ReceiptPrinter;
     $printer->receiptData = [
         'app_name' => 'XYZ MART',
         'full_name' => 'Kasir A',

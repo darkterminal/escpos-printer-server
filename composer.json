@@ -28,9 +28,9 @@
     "release:patch": "sh ./release.sh patch",
     "release:minor": "sh ./release.sh minor",
     "release:major": "sh ./release.sh major",
-    "test": "pest --colors=always",
-    "lint": "pint --test",
-    "lint:fix": "pint"
+    "test": "php -d zend.assertions=1 vendor/bin/pest --colors=always",
+    "lint": "pint --test tests",
+    "lint:fix": "pint tests"
   },
   "bin": "./eps",
   "authors": [
