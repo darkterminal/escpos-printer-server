@@ -73,6 +73,21 @@ The eps (ESC/POS Printer Server) executable bridges your web or desktop applicat
 3. Open directory or extracted content
 4. See usage section
 
+### Cross-Platform Installer (Linux / macOS)
+
+```bash
+./scripts/install.sh
+```
+
+The cross-platform installer detects the platform, resolves the latest release, downloads the Unix bundle, and extracts it to `~/.local/share/escpos-printer-server`. On Windows, use the bundled `eps-install.bat` flow instead.
+
+After install, run:
+
+```bash
+cd ~/.local/share/escpos-printer-server
+./eps --role http
+```
+
 ## Build from Source
 
 ### 1. Clone Repository
