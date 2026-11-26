@@ -1,3 +1,7 @@
+## [2.0.6] - 2026-11-26
+
+- feat: redesign settings page with modern industrial UI [Imam Ali Mustofa]
+
 ## [2.0.5] - 2026-11-26
 
 - fix: harden Windows bundle build and add release verification [Imam Ali Mustofa]
