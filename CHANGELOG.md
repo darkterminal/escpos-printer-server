@@ -1,3 +1,7 @@
+## [2.0.12] - 2026-11-26
+
+- docs: clean turso css comments and add windows usage to landing [Imam Ali Mustofa]
+
 ## [2.0.11] - 2026-11-26
 
 - docs: point landing stats to eps repo and document windows usage [Imam Ali Mustofa]
