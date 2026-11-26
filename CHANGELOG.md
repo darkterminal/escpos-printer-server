@@ -1,3 +1,7 @@
+## [2.0.7] - 2026-11-26
+
+- chore: update dependencies and remove codebase deprecations [Imam Ali Mustofa]
+
 ## [2.0.6] - 2026-11-26
 
 - feat: redesign settings page with modern industrial UI [Imam Ali Mustofa]
