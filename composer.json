@@ -5,8 +5,7 @@
   "version": "2.0.6",
   "require": {
     "php": "^8.3",
-    "workerman/workerman": "^5.1",
-    "mike42/escpos-php": "^4.0"
+    "workerman/workerman": "^5.1"
   },
   "license": "MIT",
   "autoload": {
@@ -50,9 +49,16 @@
     }
   ],
   "require-dev": {
-    "bamarni/composer-bin-plugin": "^1.8",
-    "pestphp/pest": "^3.0",
-    "laravel/pint": "^1.0"
+    "bamarni/composer-bin-plugin": "^1.9.1",
+    "pestphp/pest": "^4.0",
+    "laravel/pint": "^1.0",
+    "mike42/escpos-php": "^5.0"
+  },
+  "extra": {
+    "bamarni-bin": {
+      "bin-links": false,
+      "forward-command": true
+    }
   },
   "config": {
     "allow-plugins": {

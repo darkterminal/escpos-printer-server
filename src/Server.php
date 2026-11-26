@@ -313,7 +313,7 @@ class Server implements PrinterServer
         Worker::runAll();
     }
 
-    private function createMessage(string $type = 'info', string $message): string
+    private function createMessage(string $type, string $message): string
     {
         $timestamps = date('Y/m/d H:i:s');
         $log = strtoupper($type);
