@@ -1,0 +1,161 @@
+name: Windows Acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_run_id:
+        description: 'Build & Release Bundle run ID to download eps-bundles from'
+        required: false
+        default: '45825257104'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  windows-acceptance:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download bundle artifact
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          gh run download ${{ inputs.artifact_run_id }} --repo ${{ github.repository }} -n eps-bundles -D artifact
+          Get-ChildItem -Recurse artifact | Select-Object FullName,Length
+
+      - name: Extract Windows bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Get-ChildItem artifact -Filter 'eps-windows-bundle-*.zip' | Select-Object -First 1
+          if (-not $zip) { throw 'Windows bundle ZIP not found in artifact' }
+          Write-Host "Using $($zip.FullName)"
+          New-Item -ItemType Directory -Force -Path bundle | Out-Null
+          Expand-Archive -Path $zip.FullName -DestinationPath bundle -Force
+          Get-ChildItem bundle | Select-Object Name
+
+      - name: Verify required files exist
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @(
+            'bundle\src\functions.php',
+            'bundle\config\settings.html',
+            'bundle\config\printer-settings.json',
+            'bundle\composer.json',
+            'bundle\composer.lock',
+            'bundle\vendor\autoload.php',
+            'bundle\eps',
+            'bundle\eps-install.bat',
+            'bundle\eps-uninstall.bat',
+            'bundle\nssm.exe',
+            'bundle\php\php.exe'
+          )
+          foreach ($p in $required) {
+            if (-not (Test-Path $p)) { throw "Missing required path: $p" }
+            Write-Host "ok $p"
+          }
+          if (Test-Path 'bundle\config\config') { throw 'Unexpected nested config/config' }
+          if (Test-Path 'bundle\src\src') { throw 'Unexpected nested src/src' }
+
+      - name: HTTP role starts and serves GUI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $php = (Resolve-Path 'bundle\php\php.exe').Path
+          $eps = (Resolve-Path 'bundle\eps').Path
+          $out = Join-Path $env:RUNNER_TEMP 'eps-http.out.log'
+          $err = Join-Path $env:RUNNER_TEMP 'eps-http.err.log'
+          $p = Start-Process -FilePath $php -ArgumentList @($eps,'--role','http') -WorkingDirectory (Resolve-Path 'bundle').Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+          try {
+            $ok = $false
+            for ($i=0; $i -lt 30; $i++) {
+              Start-Sleep -Seconds 1
+              try {
+                $resp = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/' -UseBasicParsing -TimeoutSec 2
+                if ($resp.StatusCode -eq 200 -and $resp.Content.Contains('const EPS_TOKEN') -and -not $resp.Content.Contains('Settings page missing')) {
+                  Write-Host 'GUI check passed'
+                  $ok = $true
+                  break
+                }
+              } catch {}
+            }
+            if (-not $ok) {
+              if (Test-Path $out) { Write-Host '--- stdout ---'; Get-Content $out -Tail 200 }
+              if (Test-Path $err) { Write-Host '--- stderr ---'; Get-Content $err -Tail 200 }
+              throw 'HTTP role did not serve expected GUI page'
+            }
+            $cfg = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/api/config' -UseBasicParsing -TimeoutSec 5
+            if ($cfg.StatusCode -ne 200) { throw "GET /api/config expected 200, got $($cfg.StatusCode)" }
+            Write-Host 'GET /api/config returned 200'
+          } finally {
+            if ($p -and -not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+            Start-Sleep -Seconds 1
+          }
+
+      - name: HTTP role enforces token when EPS_AUTH_TOKEN is set
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $php = (Resolve-Path 'bundle\php\php.exe').Path
+          $eps = (Resolve-Path 'bundle\eps').Path
+          $out = Join-Path $env:RUNNER_TEMP 'eps-http-token.out.log'
+          $err = Join-Path $env:RUNNER_TEMP 'eps-http-token.err.log'
+          $prev = $env:EPS_AUTH_TOKEN
+          $env:EPS_AUTH_TOKEN = 'ci-test-token'
+          $p = Start-Process -FilePath $php -ArgumentList @($eps,'--role','http') -WorkingDirectory (Resolve-Path 'bundle').Path -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+          try {
+            $ready = $false
+            for ($i=0; $i -lt 30; $i++) {
+              Start-Sleep -Seconds 1
+              try {
+                $r = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/api/config' -UseBasicParsing -TimeoutSec 2 -SkipHttpErrorCheck
+                if ($r.StatusCode -eq 401) { $ready = $true; break }
+              } catch {}
+            }
+            if (-not $ready) {
+              if (Test-Path $out) { Write-Host '--- stdout ---'; Get-Content $out -Tail 200 }
+              if (Test-Path $err) { Write-Host '--- stderr ---'; Get-Content $err -Tail 200 }
+              throw 'HTTP role did not become ready with token configured'
+            }
+            $noAuth = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/api/config' -UseBasicParsing -TimeoutSec 5 -SkipHttpErrorCheck
+            if ($noAuth.StatusCode -ne 401) { throw "Expected 401 without token, got $($noAuth.StatusCode)" }
+            Write-Host 'Unauthorized without token: ok'
+            $withAuth = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/api/config' -UseBasicParsing -TimeoutSec 5 -Headers @{ 'X-EPS-Token' = 'ci-test-token' } -SkipHttpErrorCheck
+            if ($withAuth.StatusCode -ne 200) { throw "Expected 200 with token, got $($withAuth.StatusCode)" }
+            Write-Host 'Authorized with X-EPS-Token: ok'
+          } finally {
+            if ($p -and -not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+            $env:EPS_AUTH_TOKEN = $prev
+            Start-Sleep -Seconds 1
+          }
+
+      - name: Install and verify NSSM services
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $bundle = (Resolve-Path 'bundle').Path
+          $nssm = Join-Path $bundle 'nssm.exe'
+          $php = Join-Path $bundle 'php\php.exe'
+          $eps = Join-Path $bundle 'eps'
+          & $nssm install EPS-WS $php "$eps --role ws"
+          if ($LASTEXITCODE -ne 0) { throw "nssm install EPS-WS failed: $LASTEXITCODE" }
+          & $nssm install EPS-HTTP $php "$eps --role http"
+          if ($LASTEXITCODE -ne 0) { throw "nssm install EPS-HTTP failed: $LASTEXITCODE" }
+          & $nssm start EPS-WS
+          & $nssm start EPS-HTTP
+          Start-Sleep -Seconds 5
+          $ws = & sc.exe query EPS-WS 2>&1 | Out-String
+          $http = & sc.exe query EPS-HTTP 2>&1 | Out-String
+          Write-Host $ws
+          Write-Host $http
+          if ($ws -notmatch 'RUNNING') { throw 'EPS-WS not RUNNING' }
+          if ($http -notmatch 'RUNNING') { throw 'EPS-HTTP not RUNNING' }
+          $resp = Invoke-WebRequest -Uri 'http://127.0.0.1:1100/' -UseBasicParsing -TimeoutSec 5
+          if ($resp.StatusCode -ne 200) { throw "Service HTTP endpoint returned $($resp.StatusCode)" }
+          if ($resp.Content.Contains('Settings page missing')) { throw 'Service returned Settings page missing' }
+          Write-Host 'NSSM service checks passed'
