@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>ESC/POS Printer Settings</title>
+    <script>const EPS_TOKEN = __EPS_TOKEN_JSON__;</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -253,7 +254,7 @@
         let wsServer = "ws://localhost:1945";
 
         async function fetchConfig() {
-            const res = await fetch(apiBase);
+            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
             const data = await res.json();
 
             const ps = data.printer_settings || {};
@@ -289,7 +290,7 @@
 
         // Load config
         async function loadConfig() {
-            const res = await fetch(apiBase);
+            const res = await fetch(apiBase, { headers: { 'X-EPS-Token': EPS_TOKEN } });
             const data = await res.json();
             const ps = data.printer_settings || {};
             const lang = ps.custom_language || {};
@@ -322,6 +323,7 @@
             langKeys.forEach(k => custom_language[k] = el("lang_" + k).value);
 
             return {
+                auth_token: EPS_TOKEN,
                 from: el("from").value,
                 printer_name: el("printer_name").value,
                 printer_settings: {
@@ -389,7 +391,7 @@
             const config = buildConfig();
             await fetch(apiBase, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", 'X-EPS-Token': EPS_TOKEN },
                 body: JSON.stringify(config, null, 2)
             });
             alert("✅ Configuration saved successfully!");

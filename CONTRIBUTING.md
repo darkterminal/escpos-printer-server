@@ -78,7 +78,7 @@ Please include:
 Example:
 
 ```
-[Feature] Add WebSocket authentication using API tokens
+[Feature] Extend the implemented WebSocket API-token auth with per-terminal keys
 ```
 
 ---

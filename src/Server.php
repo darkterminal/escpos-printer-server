@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Darkterminal\EscposPrinterServer;
 
 use Darkterminal\EscposPrinterServer\Contracts\PrinterServer;
+use Darkterminal\EscposPrinterServer\Support\Auth;
 use Darkterminal\EscposPrinterServer\Support\PayloadValidator;
 use Darkterminal\EscposPrinterServer\Utils\LoggerTrait;
 use Workerman\Connection\TcpConnection;
@@ -100,7 +101,16 @@ class Server implements PrinterServer
     {
         try {
             $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
-            $this->info("Received data: " . ($data ? json_encode($data) : "unknown"));
+
+            if (!Auth::authorize(Auth::token(), $connection->getRemoteIp(), $data['auth_token'] ?? null)) {
+                $this->warning('Unauthorized websocket request from ' . $connection->getRemoteIp());
+                $connection->send($this->createMessage('error', 'Unauthorized'));
+                $connection->close();
+                return;
+            }
+
+            $loggedData = is_array($data) ? array_diff_key($data, ['auth_token' => null]) : $data;
+            $this->info("Received data: " . ($loggedData ? json_encode($loggedData) : "unknown"));
 
             $data = PayloadValidator::validate($data);
 
@@ -183,10 +193,19 @@ class Server implements PrinterServer
                     return;
                 }
                 $html = file_get_contents($settingsPage);
+                $html = str_replace('__EPS_TOKEN_JSON__', json_encode(Auth::token() ?? ''), $html);
                 $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
                 return;
             }
             if ($path === '/api/config') {
+                $provided = $req->header('X-EPS-Token');
+                $provided = $provided === null ? null : (string) $provided;
+
+                if (!Auth::authorize(Auth::token(), $connection->getRemoteIp(), $provided)) {
+                    $connection->send(new Response(401, ['Content-Type' => 'text/plain'], 'Unauthorized'));
+                    return;
+                }
+
                 if ($req->method() === 'GET') {
                     $data = file_exists($configFile) ? file_get_contents($configFile) : '{}';
                     $connection->send(new Response(200, ['Content-Type' => 'application/json'], $data));
@@ -250,12 +269,21 @@ class Server implements PrinterServer
                     return;
                 }
                 $html = file_get_contents($settingsPage);
+                $html = str_replace('__EPS_TOKEN_JSON__', json_encode(Auth::token() ?? ''), $html);
                 $connection->send(new Response(200, ['Content-Type' => 'text/html'], $html));
                 return;
             }
 
             // Serve API endpoints
             if ($path === '/api/config') {
+                $provided = $request->header('X-EPS-Token');
+                $provided = $provided === null ? null : (string) $provided;
+
+                if (!Auth::authorize(Auth::token(), $connection->getRemoteIp(), $provided)) {
+                    $connection->send(new Response(401, ['Content-Type' => 'text/plain'], 'Unauthorized'));
+                    return;
+                }
+
                 if ($method === 'GET') {
                     $data = file_exists($configFile) ? file_get_contents($configFile) : '{}';
                     $connection->send(new Response(200, ['Content-Type' => 'application/json'], $data));
