@@ -4,6 +4,7 @@
   "type": "library",
   "version": "2.0.4",
   "require": {
+    "php": "^8.3",
     "workerman/workerman": "^5.1",
     "mike42/escpos-php": "^4.0"
   },
@@ -16,12 +17,20 @@
       "src/functions.php"
     ]
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
   "scripts": {
     "create:phar": "sh ./build-phar.sh",
     "create:bundle": "sh ./make-bundle.sh",
     "release:patch": "sh ./release.sh patch",
     "release:minor": "sh ./release.sh minor",
-    "release:major": "sh ./release.sh major"
+    "release:major": "sh ./release.sh major",
+    "test": "pest --colors=always",
+    "lint": "pint --test",
+    "lint:fix": "pint"
   },
   "bin": "./eps",
   "authors": [
@@ -41,11 +50,14 @@
     }
   ],
   "require-dev": {
-    "bamarni/composer-bin-plugin": "^1.8"
+    "bamarni/composer-bin-plugin": "^1.8",
+    "pestphp/pest": "^3.0",
+    "laravel/pint": "^1.0"
   },
   "config": {
     "allow-plugins": {
-      "bamarni/composer-bin-plugin": true
+      "bamarni/composer-bin-plugin": true,
+      "pestphp/pest-plugin": true
     }
   }
 }
