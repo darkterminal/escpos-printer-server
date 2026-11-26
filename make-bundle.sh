@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 RELEASE_DIR="bundle"
 
@@ -13,9 +14,11 @@ find /tmp/nssm_unpack -type f -iname "nssm.exe" -exec cp {} "$RELEASE_DIR/" \;
 ls -la "$RELEASE_DIR" || true
 
 LISTING="$(curl -s https://windows.php.net/downloads/releases/)"
+# Keep the fallback reachable when the listing has no match (egrep returns 1
+# and pipefail would otherwise abort the script).
 PHP_ZIP=$(echo "$LISTING" \
 | egrep -o 'php-8\.4\.[0-9]+-Win32-vs1[67]-x64\.zip' \
-| sort -V | tail -n1)
+| sort -V | tail -n1) || true
 
 if [ -z "$PHP_ZIP" ]; then
     echo "Fallback: Using php-8.4.13-Win32-vs17-x64.zip"
@@ -45,6 +48,8 @@ mkdir -p "$RELEASE_DIR/src/"
 # Copy the whole `src` directory into the bundle so it appears as "$RELEASE_DIR/src"
 cp -r src "$RELEASE_DIR/"
 cp composer.json "$RELEASE_DIR/composer.json"
+# Pin the in-bundle install to the same resolved versions as CI.
+cp composer.lock "$RELEASE_DIR/composer.lock"
 cp eps "$RELEASE_DIR/eps"
 
 cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
@@ -55,18 +60,24 @@ echo "Installing Composer inside $RELEASE_DIR..."
 
 cd "$RELEASE_DIR"
 
-sleep 5
-
 # Download installer using curl (more reliable than PHP copy)
-curl -sS https://getcomposer.org/installer -o composer-setup.php
+curl -fsSL https://getcomposer.org/installer -o composer-setup.php
 
-# Verify installer signature (optional but secure)
-EXPECTED_SIGNATURE="ed0feb545ba87161262f2d45a633e34f591ebb3381f2e0063c345ebea4d228dd0043083717770234ec00c5a9f9593792"
+# Verify the installer hash against the live published value; never pin it.
+EXPECTED_SIGNATURE="$(curl -fsSL https://composer.github.io/installer.sig || true)"
+
+# The published hash is a SHA-384 digest: 96 hex characters.
+if ! [[ "$EXPECTED_SIGNATURE" =~ ^[0-9a-fA-F]{96}$ ]]; then
+    echo "ERROR: Could not fetch a valid Composer installer hash (96 hex chars required)!"
+    rm -f composer-setup.php
+    exit 1
+fi
+
 ACTUAL_SIGNATURE=$("php/php.exe" -r "echo hash_file('sha384', 'composer-setup.php');")
 
 if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
-    echo "ERROR: Invalid installer signature!"
-    rm composer-setup.php
+    echo "ERROR: Invalid installer hash!"
+    rm -f composer-setup.php
     exit 1
 fi
 
@@ -78,6 +89,9 @@ rm -f composer-setup.php
 # Use composer to install dependencies inside bundle
 "php/php.exe" "composer.phar" install --no-dev --optimize-autoloader
 rm composer.phar
+
+# Gate the bundle before it can be shipped.
+bash ../scripts/verify-bundle.sh .
 
 cd ..
 echo "Composer successfully installed and dependencies are ready."

@@ -86,6 +86,10 @@ jobs:
             echo "extension_dir=ext"
           } >> "$RELEASE_DIR/php/php.ini"
 
+      # --- Restore runtime-only dependencies after the dev-enabled PHAR build ---
+      - name: Install production dependencies
+        run: composer install --no-dev --optimize-autoloader
+
       # --- Copy project files into bundle ---
       - name: Copy application files
         run: |
@@ -93,6 +97,7 @@ jobs:
           cp -r config "$RELEASE_DIR/"
           cp -r src "$RELEASE_DIR/"
           cp composer.json "$RELEASE_DIR/composer.json"
+          cp composer.lock "$RELEASE_DIR/composer.lock"
           cp eps "$RELEASE_DIR/eps"
           # Copy PHAR only if present (built above); avoid failing the job if missing
           if [ -f bin/eps.phar ]; then
@@ -103,6 +108,10 @@ jobs:
           cp scripts/eps-install.bat "$RELEASE_DIR/eps-install.bat"
           cp scripts/eps-uninstall.bat "$RELEASE_DIR/eps-uninstall.bat"
           cp -r vendor "$RELEASE_DIR/vendor"
+
+      # --- Verify the bundle layout before compressing it ---
+      - name: Verify Windows bundle layout
+        run: bash scripts/verify-bundle.sh "$RELEASE_DIR"
 
       # --- Generate ZIP filenames ---
       - name: Define ZIP filenames
@@ -131,8 +140,19 @@ jobs:
           zip -r9 "../${{ steps.names.outputs.zip_phar }}" eps.phar
           cd ..
 
+      # --- Upload artifacts for manual runs without touching a release ---
+      - name: Upload bundle ZIPs as workflow artifacts
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eps-bundles
+          path: |
+            ${{ steps.names.outputs.zip_windows }}
+            ${{ steps.names.outputs.zip_phar }}
+
       # --- Upload artifacts to GitHub Release ---
       - name: Upload ZIP files to GitHub Release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: |
