@@ -1,3 +1,10 @@
+## [2.0.9] - 2026-11-26
+
+- docs: remove hero logo and add code copy button [Imam Ali Mustofa]
+- docs: add eps logo favicon to pages layout [Imam Ali Mustofa]
+- chore: add eps logo image [Imam Ali Mustofa]
+- docs: add github pages jekyll landing page and user manual [Imam Ali Mustofa]
+
 ## [2.0.8] - 2026-11-26
 
 - docs: use one-line curl installer in cross-platform readme section [Imam Ali Mustofa]
