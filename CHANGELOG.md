@@ -1,3 +1,7 @@
+## [2.0.11] - 2026-11-26
+
+- docs: point landing stats to eps repo and document windows usage [Imam Ali Mustofa]
+
 ## [2.0.10] - 2026-11-26
 
 - docs: restructure github pages layout and ui ux from turso design pattern [Imam Ali Mustofa]
