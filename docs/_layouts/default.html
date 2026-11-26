@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title | default: site.title }}</title>
+    <meta name="description" content="{{ page.description | default: site.description }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0d0f;
+            --bg-panel: #14161a;
+            --bg-panel-alt: #191c21;
+            --bg-input: #0f1115;
+            --line: #2a2f36;
+            --line-strong: #3b424c;
+            --text: #e6e8eb;
+            --muted: #8b949f;
+            --muted-2: #626c76;
+            --accent: #d97706;
+            --accent-soft: rgba(217, 119, 6, 0.14);
+            --ok: #3fb950;
+            --ok-soft: rgba(63, 185, 80, 0.13);
+            --danger: #f85149;
+            --danger-soft: rgba(248, 81, 73, 0.12);
+            --warn: #d29922;
+            --radius: 2px;
+            --font-ui: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { background: var(--bg); color: var(--text); }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--font-ui);
+            background:
+                linear-gradient(180deg, rgba(217, 119, 6, 0.04), transparent 180px),
+                repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(255, 255, 255, 0.018) 31px, rgba(255, 255, 255, 0.018) 32px),
+                repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(255, 255, 255, 0.018) 31px, rgba(255, 255, 255, 0.018) 32px),
+                var(--bg);
+        }
+        .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+        header.site-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line-strong); }
+        .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+        .brand img { width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--line); background: var(--bg-panel); padding: 4px; }
+        .brand .name { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+        nav.site-nav { display: flex; gap: 16px; }
+        nav.site-nav a { color: var(--muted); text-decoration: none; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+        nav.site-nav a:hover, nav.site-nav a[aria-current="page"] { color: var(--accent); }
+        main { display: block; padding: 56px 0 48px; min-height: 55vh; }
+        .hero { padding: 56px 0 40px; border-bottom: 1px solid var(--line-strong); }
+        .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin: 0 0 12px; }
+        h1, h2, h3 { color: var(--text); }
+        h1 { font-size: clamp(40px, 6vw, 72px); line-height: 0.95; letter-spacing: -0.04em; margin: 0 0 16px; text-transform: uppercase; }
+        h2 { font-size: clamp(28px, 4vw, 44px); text-transform: uppercase; letter-spacing: -0.03em; margin: 0 0 24px; }
+        h3 { font-size: 20px; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 8px; }
+        .tagline { max-width: 70ch; color: var(--muted); font-size: 17px; line-height: 1.6; margin: 0 0 8px; }
+        .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 8px; }
+        .btn { display: inline-block; appearance: none; border: 1px solid var(--line-strong); background: var(--bg-panel-alt); color: var(--text); padding: 12px 16px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; border-radius: var(--radius); text-decoration: none; }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: #111318; }
+        .hero img { width: min(320px, 80%); height: auto; display: block; margin: 24px auto 0; border: 1px solid var(--line); background: var(--bg-panel); }
+        main h2 { margin-top: 0; }
+        main h3 { margin-top: 24px; }
+        main p { color: var(--muted); line-height: 1.7; margin: 0 0 12px; max-width: 80ch; }
+        main p strong, main li strong { color: var(--text); }
+        main a { color: var(--accent); }
+        main img { max-width: 100%; height: auto; border: 1px solid var(--line); background: var(--bg-panel); }
+        main code, main pre { font-family: var(--font-mono); }
+        main code { background: var(--bg-input); border: 1px solid var(--line); padding: 2px 6px; font-size: 13px; color: var(--text); }
+        main pre { display: block; background: var(--bg-input); border: 1px solid var(--line); padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; color: var(--text); }
+        main table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        main th, main td { border: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; color: var(--text); }
+        main th { background: var(--bg-panel); text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em; }
+        main ul { padding-left: 20px; }
+        main li { color: var(--muted); margin: 6px 0; }
+        main hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+        .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .card { border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 30%), var(--bg-panel); padding: 20px; }
+        .card p { margin: 0; font-size: 14px; }
+        footer { padding: 32px 0; border-top: 1px solid var(--line); color: var(--muted-2); font-family: var(--font-mono); font-size: 12px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .wrap { width: calc(100% - 24px); } main { padding: 32px 0 24px; } header.site-header { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="site-header">
+            <a class="brand" href="{{ site.baseurl }}/">
+                <img src="https://raw.githubusercontent.com/darkterminal/escpos-printer-server/main/assets/eps-logo.png" alt="ESC/POS Printer Server logo">
+                <span class="name">EPS // ESC/POS</span>
+            </a>
+            <nav class="site-nav">
+                <a href="{{ site.baseurl }}/">Home</a>
+                <a href="{{ site.baseurl }}/user-manual/">User Manual</a>
+            </nav>
+        </header>
+
+        <main>
+            {{ content }}
+        </main>
+
+        <footer>
+            <p>ESC/POS Printer Server — Industrial Receipt Printing</p>
+        </footer>
+    </div>
+</body>
+</html>

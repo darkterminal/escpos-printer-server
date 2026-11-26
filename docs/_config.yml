@@ -1,0 +1,14 @@
+title: ESC/POS Printer Server
+description: >-
+  A simple and efficient ESC/POS printer server built with PHP, Workerman and
+  ESC/POS-PHP, providing WebSocket-based printing capabilities for thermal
+  receipt printers.
+author: Imam Ali Mustofa
+lang: en
+timezone: UTC
+baseurl: "/escpos-printer-server"
+url: "https://darkterminal.github.io"
+markdown: kramdown
+kramdown:
+  input: GFM
+  auto_ids: true
