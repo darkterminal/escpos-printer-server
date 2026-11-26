@@ -12,7 +12,6 @@ description: "A simple and efficient ESC/POS printer server built with PHP, Work
         <a class="btn primary" href="#quickstart">Quick Start</a>
         <a class="btn" href="user-manual/">User Manual</a>
     </div>
-    <img src="https://raw.githubusercontent.com/darkterminal/escpos-printer-server/main/assets/eps-logo.png" alt="ESC/POS Printer Server logo">
 </div>
 
 ## Features
