@@ -1,3 +1,7 @@
+## [2.0.13] - 2026-11-26
+
+- docs: add windows install note to hero and clean remaining turso leftovers [Imam Ali Mustofa]
+
 ## [2.0.12] - 2026-11-26
 
 - docs: clean turso css comments and add windows usage to landing [Imam Ali Mustofa]
