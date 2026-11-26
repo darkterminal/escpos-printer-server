@@ -1,3 +1,11 @@
+## [2.0.8] - 2026-11-26
+
+- docs: use one-line curl installer in cross-platform readme section [Imam Ali Mustofa]
+- docs: use eps banner image in readme [Imam Ali Mustofa]
+- chore: add eps banner image [Imam Ali Mustofa]
+- feat: add cross-platform installer script and document it in readme [Imam Ali Mustofa]
+- docs: update readme for latest release and open source friendliness [Imam Ali Mustofa]
+
 ## [2.0.7] - 2026-11-26
 
 - chore: update dependencies and remove codebase deprecations [Imam Ali Mustofa]
