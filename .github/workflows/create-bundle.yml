@@ -129,6 +129,7 @@ jobs:
         id: names
         run: |
           TAG_NAME="${GITHUB_REF_NAME:-manual}"
+          TAG_NAME="${TAG_NAME//\//-}"
           DATE=$(date +%Y%m%d)
           ZIP_WINDOWS="eps-windows-bundle-${TAG_NAME}-${DATE}.zip"
           ZIP_PHAR="eps-unix-bundle-${TAG_NAME}-${DATE}.zip"
