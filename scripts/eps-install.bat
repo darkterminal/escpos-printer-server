@@ -24,13 +24,21 @@ if not exist "%PHP%" (
 )
 
 if not exist "%EPS%" (
-    echo eps.phar not found in %BASEDIR%
+    echo eps script not found in %BASEDIR%
     exit /b 1
 )
 
 if not exist "%NSSM%" (
     echo nssm.exe not found in %BASEDIR%
     exit /b 1
+)
+
+:: EPS_AUTH_TOKEN is intentionally not stored in this bundle. When it is empty,
+:: only loopback clients are accepted. Remote POS terminals need the same token
+:: set in the service environment and in every WebSocket/config client.
+if "%EPS_AUTH_TOKEN%"=="" (
+    echo Warning: EPS_AUTH_TOKEN is empty; only loopback clients will be accepted.
+    echo Remote WebSocket/config clients need the same token in the service environment and in every client.
 )
 
 echo Installing EPS as Windows services...

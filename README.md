@@ -49,6 +49,8 @@ The eps (ESC/POS Printer Server) executable bridges your web or desktop applicat
 4. Double Click `eps-install.bat` to install and run ESC/POS Printer Server as a Windows Services
 5. Need to uninstall? double click `eps-uninstall.bat` to stop and remove ESC/POS Printer Server from Windows Service
 
+> **Upgrade note:** Remote WebSocket and `/api/config` clients are rejected unless `EPS_AUTH_TOKEN` is set in the service environment and the same value is sent by every client (`auth_token` for WebSocket, `X-EPS-Token` for HTTP). Restart the `EPS-WS` and `EPS-HTTP` services after setting it. The bundled Web GUI at `http://localhost:1100` keeps working with the token unset because it is a loopback client.
+
 ### Linux/MacOS
 
 **Requirement**
@@ -112,6 +114,8 @@ WebSocket print jobs and HTTP `GET`/`POST /api/config` requests are protected by
 
 - If `EPS_AUTH_TOKEN` is unset, only loopback clients (`127.0.0.1` and `::1`) are accepted. Remote POS terminals and remote GUI clients are rejected.
 - To serve remote clients, set `EPS_AUTH_TOKEN` in the service environment, restart the server, and include the same value as `auth_token` in every WebSocket payload or as the `X-EPS-Token` header on `/api/config` requests. The bundled Web GUI injects the token into its served page automatically; operators do not need to paste it in.
+
+On Windows, `EPS_AUTH_TOKEN` belongs in the environment of the `EPS-WS` and `EPS-HTTP` services; the installer only warns when it is empty and never writes a token value to disk. Set it there and restart both services before enabling remote clients. The loopback GUI continues to work with the token unset.
 
 The token is sent only in the `X-EPS-Token` header or the WebSocket `auth_token` field and is not persisted in `printer-settings.json`.
 This is one shared token for every client, not per-user authentication; treat it as a secret. Anyone who can load the Web GUI page can see the injected token, so keep the GUI on loopback or behind TLS. TLS termination is the operator's responsibility; the built-in HTTP and WebSocket listeners are not encrypted.
