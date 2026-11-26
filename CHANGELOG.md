@@ -1,3 +1,19 @@
+## [2.0.5] - 2026-11-26
+
+- fix: harden Windows bundle build and add release verification [Imam Ali Mustofa]
+- ci: add Windows acceptance workflow for bundle verification [Imam Ali Mustofa]
+- fix: make windows bundle build reproducible and verifiable [Imam Ali Mustofa]
+- fix: derive windows php artifact from release metadata [Imam Ali Mustofa]
+- fix: sanitize workflow bundle filenames for branch refs [Imam Ali Mustofa]
+- feat: add real printer connectivity check [Imam Ali Mustofa]
+- fix: keep shared token out of persisted printer config [Imam Ali Mustofa]
+- feat: require token for remote websocket and config access [Imam Ali Mustofa]
+- fix: bundle web GUI assets in phar and bootstrap config [Imam Ali Mustofa]
+- fix: validate websocket payloads and catch throwable errors [Imam Ali Mustofa]
+- build: add tests CI job and stabilize local checks [Imam Ali Mustofa]
+- test: add pest baseline for receipt helpers [Imam Ali Mustofa]
+- build: resolve dev dependencies for php 8.3 [Imam Ali Mustofa]
+
 ## [2.0.4] - 2025-10-31
 
 - release: patch version 2.0.4 [Imam Ali Mustofa]
