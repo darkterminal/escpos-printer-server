@@ -130,7 +130,7 @@ This object contains the print source, printer configuration, and receipt data.
 | `from`             | `string` | **Yes**  | Identifier for the client or request source. Used to distinguish between standard printing, test prints, or cash drawer triggers. Examples: `"posclient"`, `"testprinter"`, `"pullcashdrawer"`. |
 | `printer_name`     | `string` | **Yes**  | The system-recognized printer name. On Linux (CUPS) it matches the printer queue name; on Windows it matches the printer’s registered device name.                                              |
 | `printer_settings` | `object` | **Yes**  | Printer configuration and behavior options. Defines how the server connects to the printer, layout preferences, and text settings.                                                              |
-| `receipt_data`     | `object` | **Yes**  | Contains all data that will be printed on the receipt, including header, items, totals, and optional promotional or footer sections.                                                            |
+| `receipt_data`     | `object` | Conditional | Required for `"posclient"` and `"testprinter"`; optional for other sources. Contains all data that will be printed on the receipt, including header, items, totals, and optional promotional or footer sections. |
 
 ---
 
@@ -330,6 +330,12 @@ Each field maps to a specific section printed by `ReceiptPrinter`.
   }
 }
 ```
+
+### Validation and errors
+
+Every WebSocket message is validated before printing. `from`, `printer_name`, and `printer_settings` (including its `interface`) are required; `receipt_data` is required only for `posclient` and `testprinter` and must contain `app_name`, `full_name`, a `transaction` object with `date_transaction`, `transaction`, and `total_transaction`, plus a non-empty `cart` of items. Numeric fields accept either JSON numbers or numeric strings (for example `"9100"` and `"45000"`); whole values are normalized to integers and fractional values remain floats. Unknown keys are preserved and ignored by the validator.
+
+Every request receives exactly one timestamped string response, for example `[2025/10/28 08:30:00][SUCCESS] Receipt printed successfully`. Invalid payloads and errors produce a single `[ERROR]` string response instead; there is no JSON response envelope.
 
 ### WebSocket Client Example (JavaScript)
 

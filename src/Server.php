@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Darkterminal\EscposPrinterServer;
 
 use Darkterminal\EscposPrinterServer\Contracts\PrinterServer;
+use Darkterminal\EscposPrinterServer\Support\PayloadValidator;
 use Darkterminal\EscposPrinterServer\Utils\LoggerTrait;
 use Workerman\Connection\TcpConnection;
 use Workerman\Protocols\Http\Request;
@@ -98,9 +99,7 @@ class Server implements PrinterServer
             $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
             $this->info("Received data: " . ($data ? json_encode($data) : "unknown"));
 
-            if (!isset($data['from'], $data['printer_name'], $data['printer_settings'])) {
-                throw new \InvalidArgumentException('Invalid payload: Missing required fields (from, printer_name, printer_settings)');
-            }
+            $data = PayloadValidator::validate($data);
 
             $receiptPrinter = new ReceiptPrinter();
             $receiptPrinter->receiptData = $data['receipt_data'];
@@ -136,7 +135,7 @@ class Server implements PrinterServer
             $errorMessage = "Invalid payload format: {$e->getMessage()}";
             $this->error($errorMessage);
             $connection->send($this->createMessage('error', $errorMessage));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $errorMessage = "An error occurred: {$e->getMessage()}";
             $this->error($errorMessage);
             $connection->send($this->createMessage('error', $errorMessage));
