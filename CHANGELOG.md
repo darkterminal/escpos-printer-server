@@ -1,3 +1,7 @@
+## [2.0.10] - 2026-11-26
+
+- docs: restructure github pages layout and ui ux from turso design pattern [Imam Ali Mustofa]
+
 ## [2.0.9] - 2026-11-26
 
 - docs: remove hero logo and add code copy button [Imam Ali Mustofa]
