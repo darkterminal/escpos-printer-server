@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f6c1492f4e281646e87b490676cc8aa",
+    "content-hash": "464a195adb3f3eca005c954d13612dc0",
     "packages": [
         {
             "name": "workerman/coroutine",
